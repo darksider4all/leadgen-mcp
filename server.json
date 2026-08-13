@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.darksider4all/leadgen-mcp",
+  "description": "Lead-generation & enrichment tools for AI agents: Romanian business registry lookup (official ONRC data), director search, website contact extraction, and WHOIS/DNS/SPF-DMARC domain audit.",
+  "title": "Leadgen MCP",
+  "websiteUrl": "https://github.com/darksider4all/leadgen-mcp",
+  "repository": {
+    "url": "https://github.com/darksider4all/leadgen-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://hermes.adrianhomelab.com/mcp"
+    }
+  ]
+}

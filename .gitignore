@@ -1,0 +1,25 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.*
+
+# Data (large, rebuilt from public sources)
+data/
+*.db
+*.db.new
+*.sqlite
+*.sqlite3
+
+# Local secrets / auth
+.github-identity
+_read_gh_identity.py
+_gh_auth.sh
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/

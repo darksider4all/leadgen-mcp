@@ -1,0 +1,42 @@
+name: leadgen-mcp
+displayName: Leadgen MCP
+description: >-
+  Lead-generation & enrichment tools for AI agents: Romanian business registry
+  lookup (official ONRC data), director search, website contact extraction, and
+  WHOIS/DNS/SPF-DMARC domain audit.
+visibility: public
+type: mcp
+author:
+  name: Adrian Oaida
+  url: https://github.com/darksider4all
+repository: https://github.com/darksider4all/leadgen-mcp
+keywords:
+  - lead-generation
+  - business-registry
+  - romania
+  - onrc
+  - whois
+  - dns
+  - contact-extraction
+files:
+  - README.md
+  - server.py
+  - load_onrc.py
+  - load_nomenclatoare.py
+  - requirements.txt
+  - LICENSE
+startCommand:
+  type: stdio
+configSchema:
+  type: object
+  properties:
+    ONRC_DB:
+      type: string
+      description: Path to the ONRC SQLite database (default /opt/leadgen-mcp/data/onrc.db)
+commandFunction: |-
+  (config) => ({
+    command: 'python',
+    args: ['server.py', '--transport', 'streamable-http', '--port', '8766'],
+    env: {}
+  })
+exampleConfig: {}
