@@ -2,8 +2,8 @@
 
 Thin REST layer over the Leadgen MCP's DB-backed lookups so the Apify
 store actor (ro-business-data-mcp) can query the official ONRC snapshot
-without bundling the 3.6 GB SQLite. Runs as a FastAPI/uvicorn service behind
-the Cloudflare tunnel (onrc-api.adrianhomelab.com).
+without bundling the 3.6 GB SQLite. Runs on 192.168.0.113:8767 behind the
+Cloudflare tunnel (onrc-api.adrianhomelab.com).
 
 Only the DB-backed tools are exposed here (lookup_business, lookup_director).
 extract_contacts and lookup_domain are stateless web tools that run inside
@@ -215,9 +215,16 @@ curl "https://onrc-api.adrianhomelab.com/lookup_director?name=popescu"</pre>
 <p class="lede">The registry is built from the official ONRC snapshot published on <a href="https://data.gov.ro">data.gov.ro</a>, indexed locally with SQLite FTS5 for fast, diacritic-insensitive full-text search. No scraping, no third-party vendor — just the official open data, made queryable.</p>
 
 <h2>Use it from an MCP client</h2>
-<p>There's also a full MCP server (business lookup, contact extraction, domain/WHOIS audit) at <code>https://hermes.adrianhomelab.com/mcp</code>, plus an <a href="https://apify.com/darksider4all/ro-business-data-mcp">Apify actor</a> for no-code access.</p>
+<p>There's also a full MCP server (business lookup, contact extraction, domain/WHOIS audit) at <code>https://hermes.adrianhomelab.com/mcp</code>, plus an <a href="https://apify.com/darknezz/ro-business-data-mcp">Apify actor</a> for no-code access.</p>
 
-<p class="foot">Leadgen · open data, open API. Questions or higher rate limits — get in touch via the project's GitHub and dev.to links.</p>
+<h2>Links</h2>
+<ul>
+<li><a href="https://github.com/darksider4all/leadgen-mcp">GitHub</a> — source code, loaders, and self-host instructions</li>
+<li><a href="https://dev.to/darksider4all_afa2428f63d0/building-a-romanian-business-registry-api-42m-companies-as-queryable-json-1dh3">dev.to</a> — how this was built</li>
+<li><a href="https://apify.com/darknezz/ro-business-data-mcp">Apify actor</a> — run it without writing code</li>
+</ul>
+
+<p class="foot">Leadgen · open data, open API. Questions or higher rate limits — open an issue on the GitHub repo.</p>
 </div>
 </body>
 </html>"""
