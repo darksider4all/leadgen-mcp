@@ -1,26 +1,28 @@
+# Data & artifacts
+data/
+*.db
+*.db-wal
+*.db-shm
+*.csv
+*.txt
+
 # Python
 venv/
 __pycache__/
 *.pyc
-*.pyo
+.venv/
+
+# Secrets / local config
 .env
-.env.*
-
-# Data (large, rebuilt from public sources)
-data/
-*.db
-*.db.new
-*.sqlite
-*.sqlite3
-
-# Local secrets / auth
-.github-identity
-_read_gh_identity.py
-_gh_auth.sh
+*.env
+*.key
+*.pem
+askpass*
+_keyring*
+*.bak-*
+*.log
 
 # OS / editor
 .DS_Store
-*.swp
 .idea/
 .vscode/
-_git_push.sh

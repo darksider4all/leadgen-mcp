@@ -20,9 +20,12 @@ keywords:
   - contact-extraction
 files:
   - README.md
+  - api.py
   - server.py
+  - monetization.py
   - load_onrc.py
   - load_nomenclatoare.py
+  - load_financiare.py
   - requirements.txt
   - LICENSE
 startCommand:

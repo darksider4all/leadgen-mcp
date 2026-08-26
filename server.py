@@ -26,7 +26,29 @@ import whois
 from bs4 import BeautifulSoup
 from mcp.server.mcpserver import MCPServer
 
-mcp = MCPServer("leadgen")
+from monetization import MonetizationMiddleware
+
+mcp = MCPServer("leadgen", middleware=[MonetizationMiddleware()])
+
+# Tool-call analytics: every invocation is appended to a JSONL file so the
+# weekly traffic monitor can count REAL tool usage (vs. liveness probes,
+# which only ever hit initialize/tools-list).
+TOOL_CALL_LOG = "/opt/leadgen-mcp/data/tool_calls.log"
+
+
+def _log_tool_call(tool: str, **args) -> None:
+    """Append a JSONL line recording a genuine tool invocation."""
+    import json as _json
+    import time as _time
+    try:
+        with open(TOOL_CALL_LOG, "a") as f:
+            f.write(_json.dumps({
+                "ts": _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime()),
+                "tool": tool,
+                "args": args,
+            }, default=str) + "\n")
+    except Exception:
+        pass
 
 # Romanian company data comes from the official ONRC open-data snapshot
 # (data.gov.ro), loaded into a local SQLite DB by load_onrc.py.
@@ -197,6 +219,7 @@ def lookup_business(query: str, max_results: int = 10) -> dict:
         query: Company name or CUI (tax ID) to search for.
         max_results: Maximum number of companies to return (1-100).
     """
+    _log_tool_call("lookup_business", query=query, max_results=max_results)
     max_results = max(1, min(int(max_results), 100))
     q = query.strip()
     if not os.path.exists(ONRC_DB):
@@ -241,6 +264,7 @@ def lookup_director(name: str, max_results: int = 10) -> dict:
         name: Director / representative name to search for (e.g. "Ion Popescu").
         max_results: Maximum number of companies to return (1-100).
     """
+    _log_tool_call("lookup_director", name=name, max_results=max_results)
     max_results = max(1, min(int(max_results), 100))
     q = name.strip()
     if not os.path.exists(ONRC_DB):
@@ -377,6 +401,7 @@ def extract_contacts(website: str, max_pages: int = 5) -> dict:
         website: The website URL to crawl (e.g. "example.com" or "https://example.com").
         max_pages: Maximum number of pages to crawl (1-20).
     """
+    _log_tool_call("extract_contacts", website=website, max_pages=max_pages)
     url = website.strip()
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
@@ -485,6 +510,7 @@ def lookup_domain(domain: str, include_dns: bool = True, include_security: bool 
         include_dns: Include DNS records (A, MX, NS, TXT, etc.).
         include_security: Include SPF/DMARC email-security check.
     """
+    _log_tool_call("lookup_domain", domain=domain)
     domain = domain.strip().lower()
     if domain.startswith("http"):
         domain = urlparse(domain).netloc
@@ -551,6 +577,100 @@ def _dns(domain: str, record_type: str) -> list:
         return [str(r) for r in resolver.resolve(domain, record_type)]
     except Exception:
         return []
+
+
+# --------------------------------------------------------------------------- #
+# Tool 5: Romanian financial statements (MFP situatii_financiare)            #
+# --------------------------------------------------------------------------- #
+def _ron(value: int | None) -> str | None:
+    """Format a RON integer with Romanian-style thousands separators."""
+    if value is None:
+        return None
+    return f"{value:,}".replace(",", ".") + " RON"
+
+
+def _fin_year_dict(row: sqlite3.Row) -> dict:
+    """One financiare row → a clean, human-readable annual result dict."""
+    revenue = row["cifra_de_afaceri_neta"]
+    profit_net = row["profit_net"]
+    loss_net = row["pierdere_neta"]
+    total_assets = None
+    if row["active_imobilizate"] is not None or row["active_circulante"] is not None:
+        total_assets = (row["active_imobilizate"] or 0) + (row["active_circulante"] or 0)
+        if row["cheltuieli_in_avans"]:
+            total_assets += row["cheltuieli_in_avans"]
+    d = {
+        "year": row["an"],
+        "source": row["sursa"],
+        "caen": row["caen"],
+        "revenue": revenue,
+        "revenueFormatted": _ron(revenue),
+        "netProfit": profit_net,
+        "netLoss": loss_net,
+        "netResult": (profit_net or 0) - (loss_net or 0)
+        if profit_net is not None or loss_net is not None else None,
+        "employees": row["numar_mediu_salariati"],
+        "totalAssets": total_assets,
+        "totalAssetsFormatted": _ron(total_assets),
+        "totalDebt": row["datorii"],
+        "totalDebtFormatted": _ron(row["datorii"]),
+        "equity": row["capitaluri_totale"],
+        "equityFormatted": _ron(row["capitaluri_totale"]),
+        "indicators": {
+            "fixedAssets": row["active_imobilizate"],
+            "currentAssets": row["active_circulante"],
+            "inventories": row["stocuri"],
+            "receivables": row["creante"],
+            "cash": row["casa_si_conturi_banci"],
+            "prepaidExpenses": row["cheltuieli_in_avans"],
+            "deferredIncome": row["venituri_in_avans"],
+            "provisions": row["provizioane"],
+            "subscribedCapital": row["capital_subscris_varsat"],
+            "totalRevenue": row["venituri_totale"],
+            "totalExpenses": row["cheltuieli_totale"],
+            "grossProfit": row["profit_brut"],
+            "grossLoss": row["pierdere_bruta"],
+        },
+    }
+    return d
+
+
+@mcp.tool()
+def lookup_financials(cui: str) -> dict:
+    """Return a Romanian company's annual financial statements (MFP data).
+
+    Data source: official Ministry of Finance 'situatii financiare' open data
+    (data.gov.ro), loaded locally by load_financiare.py. Values are RON
+    integers from the company's latest annual filing(s). Free tier returns
+    registry identity; this is the paid-tier financial enrichment.
+
+    Args:
+        cui: Romanian tax identification number (CUI), e.g. "2816464".
+    """
+    _log_tool_call("lookup_financials", cui=cui)
+    cui = (cui or "").strip()
+    if not cui:
+        return {"error": "cui is required."}
+    if not os.path.exists(ONRC_DB):
+        return {"error": "ONRC database not loaded yet. Run load_onrc.py first."}
+
+    conn = _open_db()
+    try:
+        if not _table_exists(conn, "financiare"):
+            return {"cui": cui, "found": False, "total": 0, "years": [],
+                    "message": "Financial data not loaded yet. Run load_financiare.py first.",
+                    "source": "mfp"}
+        rows = conn.execute(
+            "SELECT * FROM financiare WHERE cui = ? ORDER BY an DESC, sursa",
+            (cui,)).fetchall()
+        if not rows:
+            return {"cui": cui, "found": False, "total": 0, "years": [],
+                    "source": "mfp"}
+        years = [_fin_year_dict(r) for r in rows]
+        return {"cui": cui, "found": True, "total": len(years),
+                "years": years, "source": "mfp"}
+    finally:
+        conn.close()
 
 
 # --------------------------------------------------------------------------- #
