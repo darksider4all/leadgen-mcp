@@ -22,6 +22,14 @@ _keyring*
 *.bak-*
 *.log
 
+# Local auth / identity helpers — NEVER commit these
+.github-identity
+_read_gh_identity.py
+_gh_auth.sh
+_git_push.sh
+_list_kr_keys.py
+_mp_help.sh
+
 # OS / editor
 .DS_Store
 .idea/
