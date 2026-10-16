@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.adrianhomelab/leadgen-onrc",
+  "description": "Romanian company registry (ONRC, 4.2M firms), free API key: search, financials, directors.",
+  "title": "Leadgen ONRC Romania",
+  "websiteUrl": "https://leadgen.adrianhomelab.com",
+  "repository": {
+    "url": "https://github.com/darksider4all/leadgen-mcp",
+    "source": "github"
+  },
+  "version": "1.0.2",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://leadgen-mcp.adrianhomelab.com/mcp"
+    }
+  ]
+}
