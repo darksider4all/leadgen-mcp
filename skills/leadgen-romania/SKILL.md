@@ -38,7 +38,7 @@ Never ask the user to paste their key into the chat. It belongs in the connector
 | Revenue, profit, headcount over the years | `lookup_financials` |
 | Trend, margins, health score, peer percentile | `lookup_financial_ratios` |
 | DNS, WHOIS, SPF/DMARC of a domain | `lookup_domain` |
-| Alerts on a firm or on new firms in a niche | `watch_company`, `watch_caen`, then `poll_watchlist` |
+| Alerts on a firm or on new firms in a niche | `watch_company`, `watch_caen`, then `poll_watchlist`; `unwatch` to stop |
 | How many lookups are left today | `get_usage` (free, not counted) |
 | Something missing or wrong in the data | `report_issue` (free, not counted) |
 
@@ -83,7 +83,9 @@ Parameters for each tool: [references/tools.md](references/tools.md).
 
 ### Monitor
 `watch_company` (a firm) or `watch_caen` (new firms in a code and county) register a watch on the
-user's key. `poll_watchlist` returns what changed, most severe first. Watches need a key.
+user's key. `poll_watchlist` returns what changed, most severe first, and lists every watch the
+key holds (`active`). `unwatch` (`cui`, or `code` with its `county`) stops one; clean up the
+watches you set for a one-off check. Watches need a key.
 
 ## Answer rules
 

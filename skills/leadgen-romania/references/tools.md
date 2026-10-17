@@ -19,7 +19,8 @@ CUI, county, city, legal form, risk level, phone, website, latest revenue and he
 | `lookup_financial_ratios` | `cui`* | Trend (YoY, 3/5/10-year CAGR), margins, solvency, liquidity, a 0–100 health score with its rules, red flags, peer percentiles in the same CAEN and county. |
 | `watch_company` | `cui`* | Needs a key. |
 | `watch_caen` | `code`*, `county` | New registrations in a code (and county). Needs a key. |
-| `poll_watchlist` | — | Drains every change for the caller's watches, most severe first. |
+| `poll_watchlist` | — | Drains every change for the caller's watches, most severe first; `active` lists every watch held. |
+| `unwatch` | `cui` or `code`, `county` | Removes one of the caller's watches (`removed: 0` when not held). |
 | `get_usage` | — | Plan, daily limit, used today, left, reset time. Free. |
 | `report_issue` | `message`*, `kind` (`gap`, `wrong_record`, `bug`, `idea`), `cui`, `contact` | Free; reaches the founder. |
 

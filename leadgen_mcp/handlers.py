@@ -139,6 +139,29 @@ async def poll_watchlist(api: LeadgenAPI, args: dict[str, Any]) -> dict:
     return {k: v for k, v in body.items() if k not in ("ok", "cleared")}
 
 
+async def unwatch(api: LeadgenAPI, args: dict[str, Any]) -> dict:
+    """DELETE /watches removes one watch; reshaped to the hosted unwatch answer. A watch the
+    key does not hold is ok with removed 0, as the hosted tool answers it."""
+    cui = str(args.get("cui") or "").strip()
+    code = str(args.get("code") or "").strip()
+    if bool(cui) == bool(code):
+        return {"error": "give_cui_or_code",
+                "message": "Pass cui (a watched firm) or code (a watched CAEN code, with its county), not both."}
+    county = str(args.get("county") or "").strip() or None
+    kind, target = ("company", cui) if cui else ("caen", code)
+    params = {"kind": kind, "target": target}
+    if kind == "caen" and county:
+        params["county"] = county
+    body = await api.request("DELETE", "/watches", params=params)
+    if body.get("error") not in (None, "not_watching"):
+        return body
+    removed = 0 if body.get("error") else int(body.get("removed") or 0)
+    return {"ok": True, "removed": removed, "kind": kind, "target": target,
+            "county": county if kind == "caen" else None,
+            "message": ("Watch removed." if removed else
+                        "This key does not watch that; nothing changed. See poll_watchlist's active list.")}
+
+
 HANDLERS: dict[str, Handler] = {
     "lookup_business": _get("/lookup_business", "query", "max_results", "county", *COMPANY_VIEW),
     "lookup_companies": _post("/lookup_companies", "cuis", *COMPANY_VIEW),
@@ -157,6 +180,7 @@ HANDLERS: dict[str, Handler] = {
     "watch_company": watch_company,
     "watch_caen": watch_caen,
     "poll_watchlist": poll_watchlist,
+    "unwatch": unwatch,
     "get_usage": _get("/usage"),
     "report_issue": report_issue,
 }

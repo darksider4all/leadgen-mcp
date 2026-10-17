@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "leadgen-mcp"
-version = "0.1.1"
+version = "0.1.2"
 description = "Open-source local MCP server for Leadgen: Romanian company data (ONRC, ANAF, financial statements) through Leadgen's public REST API."
 readme = "README.md"
 license = "MIT"

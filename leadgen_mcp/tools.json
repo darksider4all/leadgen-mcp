@@ -6,7 +6,7 @@
     "version": "1.0.0",
     "websiteUrl": "https://leadgen.adrianhomelab.com/"
   },
-  "instructions": "Romanian business data for AI agents: the official ONRC company registry (4.2M firms), Ministry of Finance filings, and website/domain enrichment, all from Romanian government open data loaded locally.\n\nWhich tool: lookup_business for a firm by name or CUI (start here); lookup_director when you know a person; lookup_by_category to find firms by activity rather than name; extract_contacts or lookup_domain for a website; lookup_financials and lookup_financial_ratios for money; enrich_company for one firm's full profile in a single call. watch_company and watch_caen register monitors, and poll_watchlist returns what changed.\n\nSearch is diacritic-insensitive: pass plain ASCII ('paval' matches 'PAVAL').\n\nCite the date: every company result, list, financial answer and watch carries asOf {registry, financialYear, anaf}. When you quote registry data, say it is as of the ONRC snapshot of asOf.registry (e.g. 'as of the ONRC snapshot of 2 Sept 2026'); name asOf.financialYear with figures and asOf.anaf with VAT or inactive status.\n\nCoverage: a first look, not a full check. risk.level 'ok' only means no distress signal in the ONRC statuses and ANAF flags held; the insolvency bulletin (BPI), ANAF tax debts, court cases and shareholders are not checked (risk.notChecked; https://leadgen.adrianhomelab.com/en/coverage). Never call a firm clean, safe or solvent on this data alone: say what was not checked.\n\nLimits: 5 lookups per day anonymously, 25 per day with a free API key - an email address, no payment - from https://leadgen.adrianhomelab.com/start. get_usage shows what is left today (free, not counted). report_issue tells the founder what is missing or wrong (free, not counted). REST API docs: https://leadgen.adrianhomelab.com/docs\n\nPlans: free during launch - every tool works within the limits above. When paid plans go live, full financial history, ratios and health score, financial filters (revenue, headcount, VAT, main activity) and CSV move to Pro (https://leadgen-checkout.adrianhomelab.com/).",
+  "instructions": "Romanian business data for AI agents: the official ONRC company registry (4.2M firms), Ministry of Finance filings, and website/domain enrichment, all from Romanian government open data loaded locally.\n\nWhich tool: lookup_business for a firm by name or CUI (start here); lookup_director when you know a person; lookup_by_category to find firms by activity rather than name; extract_contacts or lookup_domain for a website; lookup_financials and lookup_financial_ratios for money; enrich_company for one firm's full profile in a single call. watch_company and watch_caen register monitors, poll_watchlist returns what changed and lists the watches you hold, and unwatch removes one.\n\nSearch is diacritic-insensitive: pass plain ASCII ('paval' matches 'PAVAL').\n\nCite the date: every company result, list, financial answer and watch carries asOf {registry, financialYear, anaf}. When you quote registry data, say it is as of the ONRC snapshot of asOf.registry (e.g. 'as of the ONRC snapshot of 2 Sept 2026'); name asOf.financialYear with figures and asOf.anaf with VAT or inactive status.\n\nCoverage: a first look, not a full check. risk.level 'ok' only means no distress signal in the ONRC statuses and ANAF flags held; the insolvency bulletin (BPI), ANAF tax debts, court cases and shareholders are not checked (risk.notChecked; https://leadgen.adrianhomelab.com/en/coverage?src=mcp-instructions). Never call a firm clean, safe or solvent on this data alone: say what was not checked.\n\nLinks to pass on: a company result carries url, its public record page, to share with your user; a lookup_by_category list carries appUrl, which opens the same list in the Leadgen app.\n\nLimits: 5 lookups per day anonymously, 25 per day with a free API key - an email address, no payment - from https://leadgen.adrianhomelab.com/start?src=mcp-instructions. get_usage shows what is left today (free, not counted): tool results carry the allowance only in their _meta (leadgen/usage), which many clients do not show you, so call get_usage when you need the remaining count, e.g. before a long batch. Answers with an error are not counted. report_issue tells the founder what is missing or wrong (free, not counted). REST API docs: https://leadgen.adrianhomelab.com/docs?src=mcp-instructions\n\nPlans: free during launch - every tool works within the limits above. When paid plans go live, full financial history, ratios and health score, financial filters (revenue, headcount, VAT, main activity) and CSV move to Pro (https://leadgen-checkout.adrianhomelab.com/?src=mcp-instructions).",
   "tools": [
     {
       "annotations": {
@@ -58,7 +58,7 @@
           },
           "compact": {
             "default": false,
-            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level, phone, website, latest revenue and headcount).",
+            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level and what it did not check, phone, website, latest revenue and headcount, record url).",
             "title": "Compact",
             "type": "boolean"
           }
@@ -91,7 +91,7 @@
               "integer",
               "null"
             ],
-            "description": "Number of companies returned."
+            "description": "Rows returned in this answer (at most max_results), not the number of firms that match."
           },
           "results": {
             "type": [
@@ -101,7 +101,7 @@
             "description": "The company records, best first.",
             "items": {
               "type": "object",
-              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, and score/match on name searches. With fields or compact, only the requested keys.",
+              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
               "additionalProperties": true
             }
           },
@@ -229,7 +229,7 @@
           },
           "compact": {
             "default": false,
-            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level, phone, website, latest revenue and headcount).",
+            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level and what it did not check, phone, website, latest revenue and headcount, record url).",
             "title": "Compact",
             "type": "boolean"
           }
@@ -304,7 +304,7 @@
                 },
                 "company": {
                   "type": "object",
-                  "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, and score/match on name searches. With fields or compact, only the requested keys.",
+                  "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
                   "additionalProperties": true
                 }
               },
@@ -388,7 +388,7 @@
         "readOnlyHint": true,
         "title": "Find the company behind a website"
       },
-      "description": "Find the Romanian firm behind a website domain (dedeman.ro). Uses the registry's website field, else reads the site's home and legal/contact pages for the CUI or registration number it shows (matchedOn: registry_website, site_cui). Without one, it says so and offers name candidates from the page title. One lookup.",
+      "description": "Find the Romanian firm behind a website domain (dedeman.ro). Uses the registry's website field, else reads the site's home and legal/contact pages for the CUI or registration number it shows (matchedOn: registry_website, site_cui). Without one, it says so and offers name candidates from the page title or the domain name, each with a confidence (at most 0.7, never a match). One lookup.",
       "inputSchema": {
         "properties": {
           "domain": {
@@ -411,7 +411,7 @@
           },
           "compact": {
             "default": false,
-            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level, phone, website, latest revenue and headcount).",
+            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level and what it did not check, phone, website, latest revenue and headcount, record url).",
             "title": "Compact",
             "type": "boolean"
           }
@@ -468,7 +468,7 @@
             "description": "The company records, best first.",
             "items": {
               "type": "object",
-              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, and score/match on name searches. With fields or compact, only the requested keys.",
+              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
               "additionalProperties": true
             }
           },
@@ -484,7 +484,7 @@
               "array",
               "null"
             ],
-            "description": "When not found: up to 3 firms whose name matches the page title."
+            "description": "When not found (also when the site cannot be read): up to 3 firms whose name matches the page title or the domain name, each with a confidence (at most 0.7)."
           },
           "site": {
             "type": [
@@ -589,7 +589,7 @@
           },
           "compact": {
             "default": false,
-            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level, phone, website, latest revenue and headcount).",
+            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level and what it did not check, phone, website, latest revenue and headcount, record url).",
             "title": "Compact",
             "type": "boolean"
           }
@@ -752,7 +752,7 @@
                 },
                 "company": {
                   "type": "object",
-                  "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, and score/match on name searches. With fields or compact, only the requested keys.",
+                  "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
                   "additionalProperties": true
                 },
                 "candidates": {
@@ -868,7 +868,7 @@
               }
             ],
             "default": null,
-            "description": "Optional county name to narrow to (diacritic-insensitive: 'bucuresti', 'cluj'); omit for nationwide.",
+            "description": "Optional county to narrow to (diacritic-insensitive: 'bucuresti', 'cluj'; a county town such as 'Cluj-Napoca' or a Bucharest sector is read as its county); omit for nationwide. An unknown county is an error (unknown_county) with suggestions, not 0 firms.",
             "title": "County"
           },
           "max_results": {
@@ -988,7 +988,7 @@
           },
           "compact": {
             "default": false,
-            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level, phone, website, latest revenue and headcount).",
+            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level and what it did not check, phone, website, latest revenue and headcount, record url).",
             "title": "Compact",
             "type": "boolean"
           }
@@ -1063,14 +1063,14 @@
               "integer",
               "null"
             ],
-            "description": "Number of companies returned."
+            "description": "Rows returned in this answer (at most max_results), not the size of the match set: a full page (total == max_results) may have more; narrow the filters or raise max_results."
           },
           "truncated": {
             "type": [
               "boolean",
               "null"
             ],
-            "description": "true when more firms match than were returned."
+            "description": "true when max_results was cut to the list cap (and the list is full)."
           },
           "inactiveFilteredOut": {
             "type": [
@@ -1094,7 +1094,7 @@
             "description": "The company records, best first.",
             "items": {
               "type": "object",
-              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, and score/match on name searches. With fields or compact, only the requested keys.",
+              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
               "additionalProperties": true
             }
           },
@@ -1110,7 +1110,21 @@
               "array",
               "null"
             ],
-            "description": "The curated topics, when the topic is unknown."
+            "description": "The curated topic ids, when the topic is unknown or ambiguous."
+          },
+          "availableTopicNames": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Each curated topic id with its name, e.g. {\"agriculture\": \"Agriculture & Food\"}, next to availableTopics."
+          },
+          "appUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The same list opened in the Leadgen app (CAEN codes, county, legal form, active and main-activity filters), to share with the user; null when the app cannot open it (more than 10 codes, a legal form it does not offer)."
           },
           "source": {
             "type": [
@@ -1217,7 +1231,7 @@
           },
           "compact": {
             "default": false,
-            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level, phone, website, latest revenue and headcount).",
+            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level and what it did not check, phone, website, latest revenue and headcount, record url).",
             "title": "Compact",
             "type": "boolean"
           }
@@ -1274,7 +1288,7 @@
             "description": "The company records, best first.",
             "items": {
               "type": "object",
-              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, and score/match on name searches. With fields or compact, only the requested keys.",
+              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
               "additionalProperties": true
             }
           },
@@ -1584,7 +1598,7 @@
           },
           "company": {
             "type": "object",
-            "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, and score/match on name searches. With fields or compact, only the requested keys.",
+            "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
             "additionalProperties": true
           },
           "website": {
@@ -2074,6 +2088,13 @@
             ],
             "description": "kind, target, owner (key prefix), county, baseline."
           },
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The credit line to keep when redistributing the data (CC BY 4.0)."
+          },
           "asOf": {
             "type": [
               "object",
@@ -2172,6 +2193,13 @@
               "type": "string"
             }
           },
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The credit line to keep when redistributing the data (CC BY 4.0)."
+          },
           "asOf": {
             "type": [
               "object",
@@ -2245,12 +2273,26 @@
             ],
             "description": "Whose watches these are (key prefix or IP)."
           },
+          "active": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Every watch you hold, changed or not: kind (company or caen), target (CUI or code), county, since, name. Remove one with unwatch."
+          },
           "email_alerts": {
             "type": [
               "string",
               "null"
             ],
             "description": "How to get the same changes by email."
+          },
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The credit line to keep when redistributing the data (CC BY 4.0)."
           },
           "asOf": {
             "type": [
@@ -2279,6 +2321,133 @@
         "additionalProperties": true
       },
       "title": "Collect watchlist changes"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Stop watching a company or activity"
+      },
+      "description": "Stop watching a company (cui) or a CAEN activity code (code, plus the county it was watched in, if any), on your API key: the watch and its baseline are removed. Unwatching something you do not watch changes nothing (removed: 0). poll_watchlist lists your active watches.",
+      "inputSchema": {
+        "properties": {
+          "cui": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CUI of a watched firm (e.g. '2816464'); give this or code.",
+            "title": "Cui"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "A watched CAEN activity code (e.g. '6210'); give this or cui.",
+            "title": "Code"
+          },
+          "county": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "With code: the county the code was watched in (diacritic-insensitive); omit for a nationwide watch.",
+            "title": "County"
+          }
+        },
+        "type": "object",
+        "title": "unwatchArguments"
+      },
+      "name": "unwatch",
+      "outputSchema": {
+        "properties": {
+          "ok": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when the request was valid."
+          },
+          "removed": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "1 when the watch was removed, 0 when you did not hold it."
+          },
+          "kind": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "company or caen."
+          },
+          "target": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The CUI or CAEN code."
+          },
+          "county": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The CAEN watch's county; null for nationwide or a company."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          },
+          "active": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The watches you still hold (as in poll_watchlist)."
+          },
+          "owner": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Whose watches these are (key prefix or IP)."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          }
+        },
+        "type": "object",
+        "description": "The watch removed (or not held), and the watches you still hold.",
+        "additionalProperties": true
+      },
+      "title": "Stop watching a company or activity"
     },
     {
       "annotations": {

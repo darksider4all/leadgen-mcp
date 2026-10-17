@@ -59,7 +59,7 @@ Without a key every client works for 5 calls a day; `get_usage` tells you what i
 
 The hosted endpoint above is the main product and the simplest way in. If your client only speaks
 stdio, or you want to run the MCP server yourself, this repository also ships `leadgen-mcp`: a small
-open-source (MIT) local MCP server with the same 16 tools. It holds no data: every tool calls Leadgen's
+open-source (MIT) local MCP server with the same 17 tools. It holds no data: every tool calls Leadgen's
 public REST API (<https://leadgen.adrianhomelab.com/docs>), so answers, limits and keys are the same as
 on the hosted server. Tool names, descriptions and schemas are a snapshot of the hosted server's
 `tools/list` (`leadgen_mcp/tools.json`, refreshed with `scripts/sync_tools.py`).
@@ -146,6 +146,7 @@ with the live server card; `python scripts/check_public.py` checks that nothing 
 | `watch_company` | Register a company (by CUI) to monitor. |
 | `watch_caen` | Watch a CAEN activity code, optionally scoped to one county, for newly registered firms. |
 | `poll_watchlist` | Collect everything the watch tools have found: call it to drain the changeset for every watch owned by your API key, most severe first. |
+| `unwatch` | Stop watching a firm (`cui`) or a CAEN code (`code`, with its `county` if it had one). A watch you do not hold answers `removed: 0`. |
 | `get_usage` | Show your own allowance: plan, daily limit, lookups used today, how many remain, when it resets (00:00 UTC) and any credit balance. |
 | `report_issue` | Tell the Leadgen founder what is missing or wrong: a missing field, firm or source (kind 'gap'), a wrong company record ('wrong_record', pass its cui), a bug, an idea. |
 

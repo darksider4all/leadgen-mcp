@@ -110,3 +110,29 @@ async def test_poll_without_a_key_is_a_clear_error():
         router.post("/watches/seen").mock(return_value=httpx.Response(401, json=body))
         result = await call_tool("poll_watchlist", {})
     assert result.isError and "api_key_required" in result.content[0].text
+
+
+async def test_unwatch_company_deletes_and_reshapes():
+    with respx.mock(base_url=API) as router:
+        route = router.delete("/watches").mock(return_value=httpx.Response(200, json={"ok": True, "removed": 1, "limits": {}}))
+        result = await call_tool("unwatch", {"cui": "2816464"}, **KEY)
+    assert dict(route.calls.last.request.url.params) == {"kind": "company", "target": "2816464", "src": "glama"}
+    data = result.structuredContent
+    assert data["ok"] is True and data["removed"] == 1 and data["kind"] == "company" and data["county"] is None
+
+
+async def test_unwatch_caen_passes_county_and_not_held_is_removed_zero():
+    body = {"error": "not_watching", "message": "This key does not watch that."}
+    with respx.mock(base_url=API) as router:
+        route = router.delete("/watches").mock(return_value=httpx.Response(404, json=body))
+        result = await call_tool("unwatch", {"code": "4321", "county": "Cluj"}, **KEY)
+    assert dict(route.calls.last.request.url.params) == {"kind": "caen", "target": "4321", "county": "Cluj", "src": "glama"}
+    data = result.structuredContent
+    assert data["ok"] is True and data["removed"] == 0 and data["county"] == "Cluj"
+
+
+@pytest.mark.parametrize("args", [{}, {"cui": "2816464", "code": "4321"}])
+async def test_unwatch_needs_exactly_one_target(args):
+    with respx.mock(base_url=API, assert_all_called=False):
+        result = await call_tool("unwatch", args, **KEY)
+    assert result.structuredContent["error"] == "give_cui_or_code"

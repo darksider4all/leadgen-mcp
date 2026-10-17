@@ -20,7 +20,7 @@ TOOLS_JSON = ROOT / "leadgen_mcp" / "tools.json"
 
 def test_every_snapshot_tool_has_a_handler():
     names = [tool["name"] for tool in snapshot()["tools"]]
-    assert len(names) == 16
+    assert len(names) == 17
     assert sorted(names) == sorted(HANDLERS)
 
 
