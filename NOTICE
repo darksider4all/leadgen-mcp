@@ -1,5 +1,15 @@
-This licence covers the contents of this repository (README, server.json,
-glama.json and the skills/ folder). The Leadgen server's source code is not
-part of this repository and is not licensed here. The data the server returns
-comes from ONRC, the Ministry of Finance and ANAF under their own terms
-(see the README and https://leadgen.adrianhomelab.com/docs).
+This repository is licensed under the MIT licence (see LICENSE). It covers:
+
+- the open-source local MCP client: the leadgen_mcp/ package, scripts/, tests/,
+  the Dockerfile and the CI workflow;
+- the public description of the Leadgen server: README, server.json,
+  glama.json and the skills/ folder.
+
+leadgen_mcp/tools.json is a snapshot of the tool definitions the hosted Leadgen
+server publishes (tools/list), included so the client offers the same tools.
+
+The hosted Leadgen server's source code is not part of this repository and is
+not licensed here. The client holds no data: it calls Leadgen's public REST API.
+The data the server and the API return comes from ONRC, the Ministry of Finance
+and ANAF under their own terms (see the README and
+https://leadgen.adrianhomelab.com/docs).

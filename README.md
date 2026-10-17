@@ -11,7 +11,8 @@ and **18 years of financial statements** (Ministry of Finance, 2008–2025) with
 - **Server card:** <https://leadgen-mcp.adrianhomelab.com/.well-known/mcp/server-card.json> ·
   official MCP registry: `com.adrianhomelab/leadgen-onrc`
 
-This repository holds the public description of the server. The server's source is not public.
+This repository holds the public description of the server and an open-source local MCP client
+([below](#run-locally-open-client)). The hosted server's source is not public.
 
 ## Connect
 
@@ -51,6 +52,77 @@ URL `https://leadgen-mcp.adrianhomelab.com/mcp`, no sign-in; add the `Authorizat
 ```
 
 Without a key every client works for 5 calls a day; `get_usage` tells you what is left.
+
+## Run locally (open client)
+
+The hosted endpoint above is the main product and the simplest way in. If your client only speaks
+stdio, or you want to run the MCP server yourself, this repository also ships `leadgen-mcp`: a small
+open-source (MIT) local MCP server with the same 16 tools. It holds no data: every tool calls Leadgen's
+public REST API (<https://leadgen.adrianhomelab.com/docs>), so answers, limits and keys are the same as
+on the hosted server. Tool names, descriptions and schemas are a snapshot of the hosted server's
+`tools/list` (`leadgen_mcp/tools.json`, refreshed with `scripts/sync_tools.py`).
+
+```sh
+uvx leadgen-mcp            # or: pip install leadgen-mcp && leadgen-mcp
+```
+
+`leadgen-mcp` is not on PyPI yet; until it is, install it from this repository:
+
+```sh
+uvx --from git+https://github.com/darksider4all/leadgen-mcp leadgen-mcp
+# or
+pip install git+https://github.com/darksider4all/leadgen-mcp
+```
+
+or run it in Docker: `docker build -t leadgen-mcp .` then `docker run -i --rm -e LEADGEN_API_KEY leadgen-mcp`.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `LEADGEN_API_KEY` | none | Your free key from <https://leadgen.adrianhomelab.com/start> (25 lookups a day instead of 5). Optional; sent only when set. |
+| `LEADGEN_SOURCE` | `glama` | A channel tag sent with each request (`X-Leadgen-Source` header and `src` parameter), so Leadgen knows where its users come from. |
+| `LEADGEN_API_URL` | `https://leadgen.adrianhomelab.com` | REST API base URL. |
+| `LEADGEN_TIMEOUT` | `60` | Seconds to wait for an answer (website crawls can take a while). |
+
+**Claude Desktop** (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "leadgen": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/darksider4all/leadgen-mcp", "leadgen-mcp"],
+      "env": { "LEADGEN_API_KEY": "<your key>", "LEADGEN_SOURCE": "claude-desktop" }
+    }
+  }
+}
+```
+
+**Cursor** (`~/.cursor/mcp.json` or `.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "leadgen": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/darksider4all/leadgen-mcp", "leadgen-mcp"],
+      "env": { "LEADGEN_API_KEY": "<your key>", "LEADGEN_SOURCE": "cursor" }
+    }
+  }
+}
+```
+
+Leave `LEADGEN_API_KEY` out to use the 5 anonymous lookups a day. Once the package is on PyPI the
+`args` become `["leadgen-mcp"]`.
+
+How it relates to the hosted server: same tools, same data, and the same daily allowance
+(one allowance per key, or per IP without one, whichever door the call comes through). A refusal (no key, daily limit, suspended key) comes back as a tool
+error that keeps the server's message and the link to a free key; for the daily limit it says when it
+resets (00:00 UTC). `poll_watchlist` reads the changes and then marks them seen, as the hosted tool
+does, which over REST takes two calls, so a poll with news counts as two lookups. Watches need a key.
+
+Development: `pip install -e ".[test]" && pytest` (no network); `LEADGEN_LIVE=1 pytest tests/test_live.py`
+makes one real anonymous lookup; `LEADGEN_DRIFT=1 pytest tests/test_drift.py` compares `tools.json`
+with the live server card; `python scripts/check_public.py` checks that nothing private is committed.
 
 ## Tools
 
