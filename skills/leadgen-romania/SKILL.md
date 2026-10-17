@@ -100,7 +100,12 @@ user's key. `poll_watchlist` returns what changed, most severe first. Watches ne
   user's task needs them, and never build profiles of private individuals.
 - **Credit the data** when the user publishes or ships results:
   "Source: ONRC and Ministry of Finance (data.gov.ro, CC BY 4.0; financial statements 2008–2010
-  under OGL-ROU-1.0) and ANAF, via Leadgen". The answers carry it as `attribution`.
+  under OGL-ROU-1.0) and ANAF, via Leadgen (leadgen.adrianhomelab.com)". The answers carry it as
+  `attribution`.
+- **Links to share.** A company result's `url` is its public record page: give it to the user when
+  they want to see or keep the record (it is null for sole traders and other natural persons). A
+  `lookup_by_category` list carries `appUrl`, the same list opened in the Leadgen app. Pass both on
+  as they are.
 - **Limits.** When a call is refused for the daily limit (`daily_limit_reached`, MCP error -32002),
   quote the limit from the refusal, say when it resets (00:00 UTC) and give the `get_a_key` link it
   carries. Don't retry in a loop.
