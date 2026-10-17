@@ -101,7 +101,7 @@
             "description": "The company records, best first.",
             "items": {
               "type": "object",
-              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
+              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity (RO), activityEn}], directors, representatives [{name, role}], status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
               "additionalProperties": true
             }
           },
@@ -304,7 +304,7 @@
                 },
                 "company": {
                   "type": "object",
-                  "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
+                  "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity (RO), activityEn}], directors, representatives [{name, role}], status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
                   "additionalProperties": true
                 }
               },
@@ -468,7 +468,7 @@
             "description": "The company records, best first.",
             "items": {
               "type": "object",
-              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
+              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity (RO), activityEn}], directors, representatives [{name, role}], status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
               "additionalProperties": true
             }
           },
@@ -752,7 +752,7 @@
                 },
                 "company": {
                   "type": "object",
-                  "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
+                  "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity (RO), activityEn}], directors, representatives [{name, role}], status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
                   "additionalProperties": true
                 },
                 "candidates": {
@@ -969,9 +969,20 @@
           },
           "main_activity_only": {
             "default": false,
-            "description": "true keeps firms whose declared main activity (ANAF main CAEN, else the CAEN on the latest filing) is one of the codes, instead of any authorised activity (default false).",
+            "description": "Default false: a firm matches when the code is ANY of its authorised activities (ONRC lists a dozen per firm, most never practised). true keeps only firms whose DECLARED main activity is one of the codes (ANAF main CAEN, else the CAEN on the latest filing): fewer, more relevant firms. The Leadgen app's lists use true by default.",
             "title": "Main Activity Only",
             "type": "boolean"
+          },
+          "sort": {
+            "default": "newest",
+            "description": "Order of the results: 'newest' registrations first (default), 'revenue' (latest filing's turnover, biggest first) or 'employees' (headcount, biggest first); firms without a filing come last.",
+            "enum": [
+              "newest",
+              "revenue",
+              "employees"
+            ],
+            "title": "Sort",
+            "type": "string"
           },
           "fields": {
             "anyOf": [
@@ -1086,6 +1097,41 @@
             ],
             "description": "true when that count is estimated."
           },
+          "matchTotal": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "How many firms the whole list holds with every filter (active_only on; null when off): exact, or estimated when matchTotalApproximate is true."
+          },
+          "matchTotalApproximate": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when matchTotal is estimated (matchTotalMargin: its 99% margin)."
+          },
+          "matchTotalMargin": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The 99% margin of an estimated matchTotal."
+          },
+          "sort": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The order of results: newest, revenue or employees."
+          },
+          "caenNames": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The CAEN codes as asked, named: [{code, title (Romanian), titleEn}]."
+          },
           "results": {
             "type": [
               "array",
@@ -1094,7 +1140,7 @@
             "description": "The company records, best first.",
             "items": {
               "type": "object",
-              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
+              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity (RO), activityEn}], directors, representatives [{name, role}], status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
               "additionalProperties": true
             }
           },
@@ -1183,7 +1229,7 @@
           }
         },
         "type": "object",
-        "description": "A lead list: firms in an activity, newest registration first.",
+        "description": "A lead list: firms in an activity, newest registration first (or by turnover / headcount: sort).",
         "additionalProperties": true
       },
       "title": "Find companies by activity"
@@ -1288,7 +1334,7 @@
             "description": "The company records, best first.",
             "items": {
               "type": "object",
-              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
+              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity (RO), activityEn}], directors, representatives [{name, role}], status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
               "additionalProperties": true
             }
           },
@@ -1598,7 +1644,7 @@
           },
           "company": {
             "type": "object",
-            "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
+            "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity (RO), activityEn}], directors, representatives [{name, role}], status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, url (the firm's public record page to share with the user; null for sole traders and other natural persons), and score/match on name searches. With fields or compact, only the requested keys (compact keeps url).",
             "additionalProperties": true
           },
           "website": {
@@ -2434,6 +2480,20 @@
               "null"
             ],
             "description": "Whose watches these are (key prefix or IP)."
+          },
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The credit line to keep when redistributing the data (CC BY 4.0)."
+          },
+          "asOf": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What to cite: registry (ONRC snapshot date), financialYear (fiscal year of the figures), anaf (day of the ANAF data), snapshot, published, source."
           },
           "error": {
             "type": [

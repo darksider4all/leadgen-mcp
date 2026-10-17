@@ -170,7 +170,7 @@ HANDLERS: dict[str, Handler] = {
     "lookup_by_category": _get(
         "/lookup_by_category", "topic", "county", "max_results", "legal_form", "active_only",
         "has_website", "min_revenue", "max_revenue", "min_employees", "max_employees",
-        "vat_payer", "main_activity_only", *COMPANY_VIEW),
+        "vat_payer", "main_activity_only", "sort", *COMPANY_VIEW),
     "lookup_director": _get("/lookup_director", "name", "max_results", "prefix", *COMPANY_VIEW),
     "extract_contacts": _get("/extract_contacts", "website", "max_pages"),
     "enrich_company": _get("/enrich_company", "cui", "website", "max_pages", "refresh"),
