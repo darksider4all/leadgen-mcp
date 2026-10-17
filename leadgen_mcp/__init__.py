@@ -1,3 +1,3 @@
 """Leadgen MCP: an open-source local MCP server over Leadgen's public REST API."""
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"

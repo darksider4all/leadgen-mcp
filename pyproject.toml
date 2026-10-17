@@ -4,19 +4,29 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "leadgen-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "Open-source local MCP server for Leadgen: Romanian company data (ONRC, ANAF, financial statements) through Leadgen's public REST API."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.10"
 authors = [{ name = "Adrian Oaida" }]
-keywords = ["mcp", "model-context-protocol", "romania", "onrc", "anaf", "company-registry", "cui", "caen"]
+keywords = ["mcp", "model-context-protocol", "mcp-server", "romania", "onrc", "anaf", "company-registry", "cui", "caen", "leadgen"]
 classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Natural Language :: English",
+  "Natural Language :: Romanian",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Office/Business",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
   "mcp==1.30.0",
@@ -30,9 +40,10 @@ test = ["pytest>=8", "respx>=0.22"]
 leadgen-mcp = "leadgen_mcp.server:main"
 
 [project.urls]
-Homepage = "https://leadgen.adrianhomelab.com"
+Homepage = "https://leadgen.adrianhomelab.com/?src=leadgen-mcp"
 Documentation = "https://leadgen.adrianhomelab.com/docs"
 Repository = "https://github.com/darksider4all/leadgen-mcp"
+Issues = "https://github.com/darksider4all/leadgen-mcp/issues"
 
 [tool.setuptools]
 packages = ["leadgen_mcp"]

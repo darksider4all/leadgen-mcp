@@ -1,5 +1,7 @@
 # Leadgen MCP — Romanian company data (ONRC, ANAF, financial statements)
 
+<!-- mcp-name: com.adrianhomelab/leadgen-onrc -->
+
 A remote [Model Context Protocol](https://modelcontextprotocol.io) server for Romania's official business
 registry: **4.2M firms** from ONRC, the ANAF fiscal layer (VAT, e-Factura, fiscal inactivity, phone)
 and **18 years of financial statements** (Ministry of Finance, 2008–2025) with ratios and peer benchmarks.
@@ -62,17 +64,21 @@ public REST API (<https://leadgen.adrianhomelab.com/docs>), so answers, limits a
 on the hosted server. Tool names, descriptions and schemas are a snapshot of the hosted server's
 `tools/list` (`leadgen_mcp/tools.json`, refreshed with `scripts/sync_tools.py`).
 
-```sh
-uvx leadgen-mcp            # or: pip install leadgen-mcp && leadgen-mcp
-```
-
-`leadgen-mcp` is not on PyPI yet; until it is, install it from this repository:
+It is on PyPI as [`leadgen-mcp`](https://pypi.org/project/leadgen-mcp/) (Python 3.10 or newer):
 
 ```sh
-uvx --from git+https://github.com/darksider4all/leadgen-mcp leadgen-mcp
-# or
-pip install git+https://github.com/darksider4all/leadgen-mcp
+uvx leadgen-mcp
 ```
+
+or install it:
+
+```sh
+pip install leadgen-mcp
+leadgen-mcp
+```
+
+To run the latest commit on `main` instead of the release:
+`uvx --from git+https://github.com/darksider4all/leadgen-mcp leadgen-mcp`.
 
 or run it in Docker: `docker build -t leadgen-mcp .` then `docker run -i --rm -e LEADGEN_API_KEY leadgen-mcp`.
 
@@ -90,7 +96,7 @@ or run it in Docker: `docker build -t leadgen-mcp .` then `docker run -i --rm -e
   "mcpServers": {
     "leadgen": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/darksider4all/leadgen-mcp", "leadgen-mcp"],
+      "args": ["leadgen-mcp"],
       "env": { "LEADGEN_API_KEY": "<your key>", "LEADGEN_SOURCE": "claude-desktop" }
     }
   }
@@ -104,15 +110,14 @@ or run it in Docker: `docker build -t leadgen-mcp .` then `docker run -i --rm -e
   "mcpServers": {
     "leadgen": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/darksider4all/leadgen-mcp", "leadgen-mcp"],
+      "args": ["leadgen-mcp"],
       "env": { "LEADGEN_API_KEY": "<your key>", "LEADGEN_SOURCE": "cursor" }
     }
   }
 }
 ```
 
-Leave `LEADGEN_API_KEY` out to use the 5 anonymous lookups a day. Once the package is on PyPI the
-`args` become `["leadgen-mcp"]`.
+Leave `LEADGEN_API_KEY` out to use the 5 anonymous lookups a day.
 
 How it relates to the hosted server: same tools, same data, and the same daily allowance
 (one allowance per key, or per IP without one, whichever door the call comes through). A refusal (no key, daily limit, suspended key) comes back as a tool
