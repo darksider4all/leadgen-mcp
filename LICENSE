@@ -19,9 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-This licence covers the contents of this repository (README, server.json,
-glama.json and the skills/ folder). The Leadgen server's source code is not
-part of this repository and is not licensed here. The data the server returns
-comes from ONRC, the Ministry of Finance and ANAF under their own terms
-(see the README and https://leadgen.adrianhomelab.com/docs).
