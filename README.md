@@ -57,7 +57,10 @@ Without a key every client works for 5 calls a day; `get_usage` tells you what i
 | Tool | What it does |
 |---|---|
 | `lookup_business` | Look up a Romanian company by name or CUI (tax code) in the official ONRC registry of 4.2M firms. |
-| `lookup_by_category` | Find companies by what they do, not by name: a curated topic ('software', 'cybersecurity', 'artificial intelligence', 'retail') expands to the CAEN codes that define it, or pass a raw CAEN code or list ('4321', '4321,4322'); a raw code also finds its Rev.2/Rev.3 counterpart (6201 and 6210), said in warnings. |
+| `lookup_companies` | Look up many Romanian companies by CUI in one call (up to 100): one result per input, in input order, each with found true/false and the company record. |
+| `find_company_by_domain` | Find the Romanian firm behind a website domain (dedeman.ro). |
+| `match_companies` | Match a list of up to 500 records (name, optional county, domain or CUI) to Romanian firms: each row gets match {cui, companyName, confidence, matchedOn} and the record, or no_match with up to 3 candidates. |
+| `lookup_by_category` | Find companies by what they do, not by name: a curated topic ('software', 'retail'), plain words ('dentists', a CAEN class title; see matched) or CAEN codes ('4321,4322'; 6201 also finds Rev.3 6210). |
 | `lookup_director` | Find Romanian companies by the name of a director or legal representative (ONRC). |
 | `extract_contacts` | Crawl a company website and extract emails, phone numbers and social profiles. |
 | `enrich_company` | A whole-firm profile in one call: the ONRC registry record plus the contacts discovered on that firm's website, each labelled with a confidence and a source. |
@@ -68,6 +71,7 @@ Without a key every client works for 5 calls a day; `get_usage` tells you what i
 | `watch_caen` | Watch a CAEN activity code, optionally scoped to one county, for newly registered firms. |
 | `poll_watchlist` | Collect everything the watch tools have found: call it to drain the changeset for every watch owned by your API key, most severe first. |
 | `get_usage` | Show your own allowance: plan, daily limit, lookups used today, how many remain, when it resets (00:00 UTC) and any credit balance. |
+| `report_issue` | Tell the Leadgen founder what is missing or wrong: a missing field, firm or source (kind 'gap'), a wrong company record ('wrong_record', pass its cui), a bug, an idea. |
 
 
 Every company-bearing answer carries `asOf` (registry snapshot, financial year, ANAF load date) — cite it.
