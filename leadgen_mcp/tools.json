@@ -1,0 +1,2506 @@
+{
+  "source": "https://leadgen-mcp.adrianhomelab.com/mcp",
+  "server": {
+    "name": "leadgen",
+    "title": "Leadgen MCP - Romanian Business Data (ONRC)",
+    "version": "1.0.0",
+    "websiteUrl": "https://leadgen.adrianhomelab.com/"
+  },
+  "instructions": "Romanian business data for AI agents: the official ONRC company registry (4.2M firms), Ministry of Finance filings, and website/domain enrichment, all from Romanian government open data loaded locally.\n\nWhich tool: lookup_business for a firm by name or CUI (start here); lookup_director when you know a person; lookup_by_category to find firms by activity rather than name; extract_contacts or lookup_domain for a website; lookup_financials and lookup_financial_ratios for money; enrich_company for one firm's full profile in a single call. watch_company and watch_caen register monitors, and poll_watchlist returns what changed.\n\nSearch is diacritic-insensitive: pass plain ASCII ('paval' matches 'PAVAL').\n\nCite the date: every company result, list, financial answer and watch carries asOf {registry, financialYear, anaf}. When you quote registry data, say it is as of the ONRC snapshot of asOf.registry (e.g. 'as of the ONRC snapshot of 2 Sept 2026'); name asOf.financialYear with figures and asOf.anaf with VAT or inactive status.\n\nCoverage: a first look, not a full check. risk.level 'ok' only means no distress signal in the ONRC statuses and ANAF flags held; the insolvency bulletin (BPI), ANAF tax debts, court cases and shareholders are not checked (risk.notChecked; https://leadgen.adrianhomelab.com/en/coverage). Never call a firm clean, safe or solvent on this data alone: say what was not checked.\n\nLimits: 5 lookups per day anonymously, 25 per day with a free API key - an email address, no payment - from https://leadgen.adrianhomelab.com/start. get_usage shows what is left today (free, not counted). report_issue tells the founder what is missing or wrong (free, not counted). REST API docs: https://leadgen.adrianhomelab.com/docs\n\nPlans: free during launch - every tool works within the limits above. When paid plans go live, full financial history, ratios and health score, financial filters (revenue, headcount, VAT, main activity) and CSV move to Pro (https://leadgen-checkout.adrianhomelab.com/).",
+  "tools": [
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Look up a Romanian company"
+      },
+      "description": "Look up a Romanian company by name or CUI (tax code) in the official ONRC registry of 4.2M firms. Diacritic-insensitive ('paval' finds 'PAVAL'); a CUI matches exactly. The first call for a named Romanian company. Ranked with a score: live firms first (exact name, then words), closed ones after; county lifts. For 'firms that do X in Y', use lookup_by_category (an empty result may carry a hint naming it).",
+      "inputSchema": {
+        "properties": {
+          "query": {
+            "description": "Company name or CUI (tax ID) to search for. Names are diacritic-insensitive ('paval' finds PAVĂL); a CUI ('2816464', 'RO2816464') matches exactly.",
+            "title": "Query",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 10,
+            "description": "Maximum number of companies to return (1-100, default 10).",
+            "title": "Max Results",
+            "type": "integer"
+          },
+          "county": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional county hint (diacritic-insensitive): firms registered there rank higher. Not a filter.",
+            "title": "County"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional: keep only these company fields in each row, comma-separated (companyName,cui,county,risk; dotted paths such as risk.level work). Without it the full record is returned.",
+            "title": "Fields"
+          },
+          "compact": {
+            "default": false,
+            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level, phone, website, latest revenue and headcount).",
+            "title": "Compact",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "type": "object",
+        "title": "lookup_businessArguments"
+      },
+      "name": "lookup_business",
+      "outputSchema": {
+        "properties": {
+          "query": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The query as given."
+          },
+          "county": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The county hint, if one was given."
+          },
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Number of companies returned."
+          },
+          "results": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The company records, best first.",
+            "items": {
+              "type": "object",
+              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, and score/match on name searches. With fields or compact, only the requested keys.",
+              "additionalProperties": true
+            }
+          },
+          "found": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "false when a well-formed CUI is not in the snapshot."
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why nothing was found (not_found)."
+          },
+          "hint": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "When a name search finds nothing but reads like a category question: the lookup_by_category call that answers it."
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Data source: onrc (registry) or mfp (Ministry of Finance filings)."
+          },
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The credit line to keep when redistributing the data (CC BY 4.0)."
+          },
+          "asOf": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What to cite: registry (ONRC snapshot date), financialYear (fiscal year of the figures), anaf (day of the ANAF data), snapshot, published, source."
+          },
+          "fields": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The company fields kept when fields or compact trimmed the rows.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Notes on how the request was read (a clamped limit, a widened CAEN code, an ignored field).",
+            "items": {
+              "type": "string"
+            }
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "Ranked companies for a name, or the firm with that CUI.",
+        "additionalProperties": true
+      },
+      "title": "Look up a Romanian company"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Look up many companies by CUI"
+      },
+      "description": "Look up many Romanian companies by CUI in one call (up to 100): one result per input, in input order, each with found true/false and the company record. Each row counts as one lookup; a batch larger than what is left today is refused whole. fields or compact trims each record.",
+      "inputSchema": {
+        "properties": {
+          "cuis": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Up to 100 CUIs, as a list or one comma-separated string ('RO', spaces and leading zeros accepted, as in lookup_business).",
+            "title": "Cuis"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional: keep only these company fields in each row, comma-separated (companyName,cui,county,risk; dotted paths such as risk.level work). Without it the full record is returned.",
+            "title": "Fields"
+          },
+          "compact": {
+            "default": false,
+            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level, phone, website, latest revenue and headcount).",
+            "title": "Compact",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "cuis"
+        ],
+        "type": "object",
+        "title": "lookup_companiesArguments"
+      },
+      "name": "lookup_companies",
+      "outputSchema": {
+        "properties": {
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Number of input rows."
+          },
+          "found": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Rows that matched a firm."
+          },
+          "notFound": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Well-formed CUIs not in the snapshot."
+          },
+          "errors": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Rows that are input errors (empty, not a CUI, wrong control digit)."
+          },
+          "results": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Per input: input, cui, found, and company (the record) or error/reason.",
+            "items": {
+              "type": "object",
+              "description": "One input row's answer.",
+              "properties": {
+                "input": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "The value as given."
+                },
+                "cui": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "The normalised CUI."
+                },
+                "found": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ],
+                  "description": "Whether a firm has this CUI."
+                },
+                "company": {
+                  "type": "object",
+                  "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, and score/match on name searches. With fields or compact, only the requested keys.",
+                  "additionalProperties": true
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "metering": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What the batch cost: rows, counted, notCounted (input-error rows are not counted) and the rule."
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Data source: onrc (registry) or mfp (Ministry of Finance filings)."
+          },
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The credit line to keep when redistributing the data (CC BY 4.0)."
+          },
+          "asOf": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What to cite: registry (ONRC snapshot date), financialYear (fiscal year of the figures), anaf (day of the ANAF data), snapshot, published, source."
+          },
+          "fields": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The company fields kept when fields or compact trimmed the rows.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Notes on how the request was read (a clamped limit, a widened CAEN code, an ignored field).",
+            "items": {
+              "type": "string"
+            }
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "One result per input CUI, in input order.",
+        "additionalProperties": true
+      },
+      "title": "Look up many companies by CUI"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": "Find the company behind a website"
+      },
+      "description": "Find the Romanian firm behind a website domain (dedeman.ro). Uses the registry's website field, else reads the site's home and legal/contact pages for the CUI or registration number it shows (matchedOn: registry_website, site_cui). Without one, it says so and offers name candidates from the page title. One lookup.",
+      "inputSchema": {
+        "properties": {
+          "domain": {
+            "description": "The website's domain ('dedeman.ro'); a URL or a www. host is reduced to it. Public domains only.",
+            "title": "Domain",
+            "type": "string"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional: keep only these company fields in each row, comma-separated (companyName,cui,county,risk; dotted paths such as risk.level work). Without it the full record is returned.",
+            "title": "Fields"
+          },
+          "compact": {
+            "default": false,
+            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level, phone, website, latest revenue and headcount).",
+            "title": "Compact",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "domain"
+        ],
+        "type": "object",
+        "title": "find_company_by_domainArguments"
+      },
+      "name": "find_company_by_domain",
+      "outputSchema": {
+        "properties": {
+          "domain": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The normalised domain."
+          },
+          "found": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Whether a firm was identified."
+          },
+          "matchedOn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "registry_website, site_cui or site_registration_code."
+          },
+          "match": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "The identified firm: cui, companyName, matchedOn."
+          },
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Number of company records returned (at most 5)."
+          },
+          "results": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The company records, best first.",
+            "items": {
+              "type": "object",
+              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, and score/match on name searches. With fields or compact, only the requested keys.",
+              "additionalProperties": true
+            }
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "When not found: no_cui_on_site or site_unreachable."
+          },
+          "candidates": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "When not found: up to 3 firms whose name matches the page title."
+          },
+          "site": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What was read from the site: url, pagesRead, title, cuis, registrationCodes, error."
+          },
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The credit line to keep when redistributing the data (CC BY 4.0)."
+          },
+          "asOf": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What to cite: registry (ONRC snapshot date), financialYear (fiscal year of the figures), anaf (day of the ANAF data), snapshot, published, source."
+          },
+          "fields": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The company fields kept when fields or compact trimmed the rows.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Notes on how the request was read (a clamped limit, a widened CAEN code, an ignored field).",
+            "items": {
+              "type": "string"
+            }
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "The firm behind a website domain, or why none was found.",
+        "additionalProperties": true
+      },
+      "title": "Find the company behind a website"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Match a list of records to firms"
+      },
+      "description": "Match a list of up to 500 records (name, optional county, domain or CUI) to Romanian firms: each row gets match {cui, companyName, confidence, matchedOn} and the record, or no_match with up to 3 candidates. A valid CUI wins (confidence 1.0). Each row counts as one lookup; a batch larger than what is left today is refused whole.",
+      "inputSchema": {
+        "properties": {
+          "rows": {
+            "description": "Up to 500 records, each {name, county, domain, cui, ref} (any of them; ref is your own id, echoed back), or a bare string (a CUI, a domain or a name).",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/MatchRow"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional: keep only these company fields in each row, comma-separated (companyName,cui,county,risk; dotted paths such as risk.level work). Without it the full record is returned.",
+            "title": "Fields"
+          },
+          "compact": {
+            "default": false,
+            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level, phone, website, latest revenue and headcount).",
+            "title": "Compact",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "type": "object",
+        "$defs": {
+          "MatchRow": {
+            "description": "One record to match: any of name, county, domain, cui; ref (your own id) is echoed back.",
+            "properties": {
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Company name (diacritic-insensitive; legal-form words ignored).",
+                "title": "Name"
+              },
+              "county": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Optional county hint (diacritic-insensitive): firms there rank higher.",
+                "title": "County"
+              },
+              "domain": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Optional website domain ('dedeman.ro'), matched to the registry's website field.",
+                "title": "Domain"
+              },
+              "cui": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Optional CUI (tax code); a valid one wins (confidence 1.0).",
+                "title": "Cui"
+              },
+              "ref": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Your own id for the row, echoed back unchanged.",
+                "title": "Ref"
+              }
+            },
+            "title": "MatchRow",
+            "type": "object"
+          }
+        },
+        "title": "match_companiesArguments"
+      },
+      "name": "match_companies",
+      "outputSchema": {
+        "properties": {
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Number of input rows."
+          },
+          "matched": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Rows matched to a firm."
+          },
+          "noMatch": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Rows with no match above the threshold."
+          },
+          "errors": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Rows that are input errors (nothing to match on)."
+          },
+          "threshold": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Confidence a row needs to be matched (0-1)."
+          },
+          "results": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Per row: row, input, status (matched or no_match), match {cui, companyName, confidence, matchedOn}, company, or candidates.",
+            "items": {
+              "type": "object",
+              "description": "One input row's answer.",
+              "properties": {
+                "row": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "Position of the row in the input (0-based)."
+                },
+                "input": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "description": "The row as read: name, county, domain, cui, ref."
+                },
+                "status": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "matched, no_match, or an error status."
+                },
+                "match": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "description": "The firm matched: cui, companyName, confidence, matchedOn."
+                },
+                "company": {
+                  "type": "object",
+                  "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, and score/match on name searches. With fields or compact, only the requested keys.",
+                  "additionalProperties": true
+                },
+                "candidates": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "description": "Best candidates when no_match."
+                },
+                "ref": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Your own id for the row, echoed back."
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "metering": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What the batch cost: rows, counted, notCounted (input-error rows are not counted) and the rule."
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Data source: onrc (registry) or mfp (Ministry of Finance filings)."
+          },
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The credit line to keep when redistributing the data (CC BY 4.0)."
+          },
+          "asOf": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What to cite: registry (ONRC snapshot date), financialYear (fiscal year of the figures), anaf (day of the ANAF data), snapshot, published, source."
+          },
+          "fields": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The company fields kept when fields or compact trimmed the rows.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Notes on how the request was read (a clamped limit, a widened CAEN code, an ignored field).",
+            "items": {
+              "type": "string"
+            }
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "One match per input record, in input order.",
+        "additionalProperties": true
+      },
+      "title": "Match a list of records to firms"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Find companies by activity"
+      },
+      "description": "Find companies by what they do, not by name: a curated topic ('software', 'retail'), plain words ('dentists', a CAEN class title; see matched) or CAEN codes ('4321,4322'; 6201 also finds Rev.3 6210). Narrow by county; qualify by revenue, headcount, VAT, main activity. active_only (default) drops dead and ANAF-inactive firms.",
+      "inputSchema": {
+        "properties": {
+          "topic": {
+            "description": "What the firms do: a curated topic ('software', 'retail'), plain words for a trade ('dentists', 'stomatologie'), a CAEN class title in Romanian or English, or CAEN codes ('6201' or '4321,4322'). Case-, space- and diacritic-insensitive. A number that names another activity in each revision takes a suffix: '4781r3' (Rev.3) or '4781r2' (Rev.2).",
+            "title": "Topic",
+            "type": "string"
+          },
+          "county": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional county name to narrow to (diacritic-insensitive: 'bucuresti', 'cluj'); omit for nationwide.",
+            "title": "County"
+          },
+          "max_results": {
+            "default": 10,
+            "description": "Maximum number of companies to return (1-100, default 10).",
+            "title": "Max Results",
+            "type": "integer"
+          },
+          "legal_form": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional legal form(s) to keep, comma-separated, case-insensitive: 'SRL', 'SA', 'PFA', 'II', or 'SRL,SA' (companies, no sole traders). Default: any form.",
+            "title": "Legal Form"
+          },
+          "active_only": {
+            "default": true,
+            "description": "Default true: drop firms that are not a lead (struck off, dissolving, in liquidation, insolvent or bankrupt, activity suspended, or ANAF fiscally inactive). false returns every firm.",
+            "title": "Active Only",
+            "type": "boolean"
+          },
+          "has_website": {
+            "default": false,
+            "description": "true keeps only firms with a website on file in the registry (default false).",
+            "title": "Has Website",
+            "type": "boolean"
+          },
+          "min_revenue": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional minimum net turnover in RON on the latest filing (FY2025, else FY2024). Firms without a filing never match a band.",
+            "title": "Min Revenue"
+          },
+          "max_revenue": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional maximum net turnover in RON on the latest filing.",
+            "title": "Max Revenue"
+          },
+          "min_employees": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional minimum average headcount on the latest filing.",
+            "title": "Min Employees"
+          },
+          "max_employees": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional maximum average headcount on the latest filing.",
+            "title": "Max Employees"
+          },
+          "vat_payer": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional: true keeps VAT-registered firms only, false only non-VAT payers (ANAF data). Omit for both.",
+            "title": "Vat Payer"
+          },
+          "main_activity_only": {
+            "default": false,
+            "description": "true keeps firms whose declared main activity (ANAF main CAEN, else the CAEN on the latest filing) is one of the codes, instead of any authorised activity (default false).",
+            "title": "Main Activity Only",
+            "type": "boolean"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional: keep only these company fields in each row, comma-separated (companyName,cui,county,risk; dotted paths such as risk.level work). Without it the full record is returned.",
+            "title": "Fields"
+          },
+          "compact": {
+            "default": false,
+            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level, phone, website, latest revenue and headcount).",
+            "title": "Compact",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "topic"
+        ],
+        "type": "object",
+        "title": "lookup_by_categoryArguments"
+      },
+      "name": "lookup_by_category",
+      "outputSchema": {
+        "properties": {
+          "topic": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The curated topic matched, if any."
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Human label of what was matched."
+          },
+          "query": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The topic as given."
+          },
+          "county": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The county filter, if any."
+          },
+          "caenCodes": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The CAEN codes searched, when given or derived as codes."
+          },
+          "codesAdded": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "CAEN Rev.2/Rev.3 counterparts added to the search."
+          },
+          "matched": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "How plain words were read: by, niche or class title, codes."
+          },
+          "filters": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "The filters applied (legalForm, activeOnly, revenue and headcount bands, vatPayer, mainActivityOnly ...)."
+          },
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Number of companies returned."
+          },
+          "truncated": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when more firms match than were returned."
+          },
+          "inactiveFilteredOut": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Firms removed by active_only (null when off)."
+          },
+          "inactiveFilteredOutApproximate": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when that count is estimated."
+          },
+          "results": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The company records, best first.",
+            "items": {
+              "type": "object",
+              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, and score/match on name searches. With fields or compact, only the requested keys.",
+              "additionalProperties": true
+            }
+          },
+          "candidates": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "When the words fit several activities (ambiguous_topic): the ones to choose from."
+          },
+          "availableTopics": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The curated topics, when the topic is unknown."
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Data source: onrc (registry) or mfp (Ministry of Finance filings)."
+          },
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The credit line to keep when redistributing the data (CC BY 4.0)."
+          },
+          "asOf": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What to cite: registry (ONRC snapshot date), financialYear (fiscal year of the figures), anaf (day of the ANAF data), snapshot, published, source."
+          },
+          "fields": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The company fields kept when fields or compact trimmed the rows.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Notes on how the request was read (a clamped limit, a widened CAEN code, an ignored field).",
+            "items": {
+              "type": "string"
+            }
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "A lead list: firms in an activity, newest registration first.",
+        "additionalProperties": true
+      },
+      "title": "Find companies by activity"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Find companies by director"
+      },
+      "description": "Find Romanian companies by the name of a director or legal representative (ONRC). Diacritic-insensitive. Whole words: 'pop maria' finds POP MARIA, not POPA MARIANA; prefix=true matches prefixes. The registry has no personal ID, so one name can be several people: homonyms and byCounty say so. Use this when you know a person rather than a firm.",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "description": "Director / representative name to search for (e.g. 'Ion Popescu'); diacritic-insensitive, each word a whole word of the name.",
+            "title": "Name",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 10,
+            "description": "Maximum number of companies to return (1-100, default 10).",
+            "title": "Max Results",
+            "type": "integer"
+          },
+          "prefix": {
+            "default": false,
+            "description": "true matches each word as a prefix ('pop' also finds POPA, POPESCU); default false (whole words).",
+            "title": "Prefix",
+            "type": "boolean"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional: keep only these company fields in each row, comma-separated (companyName,cui,county,risk; dotted paths such as risk.level work). Without it the full record is returned.",
+            "title": "Fields"
+          },
+          "compact": {
+            "default": false,
+            "description": "Optional: true keeps a short preset per row (name, CUI, county, city, legal form, risk level, phone, website, latest revenue and headcount).",
+            "title": "Compact",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "title": "lookup_directorArguments"
+      },
+      "name": "lookup_director",
+      "outputSchema": {
+        "properties": {
+          "query": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The name as given."
+          },
+          "match": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "words (whole words) or prefix."
+          },
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Every matching firm, not just the rows returned."
+          },
+          "totalIsLowerBound": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when the scan stopped early and total is a minimum."
+          },
+          "returned": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Number of companies returned."
+          },
+          "results": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The company records, best first.",
+            "items": {
+              "type": "object",
+              "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, and score/match on name searches. With fields or compact, only the requested keys.",
+              "additionalProperties": true
+            }
+          },
+          "byCounty": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Matching firms per county."
+          },
+          "homonyms": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when the matches span several counties (likely several people)."
+          },
+          "distinctCounties": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Number of counties the matches are in."
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What homonyms means for this name."
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Data source: onrc (registry) or mfp (Ministry of Finance filings)."
+          },
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The credit line to keep when redistributing the data (CC BY 4.0)."
+          },
+          "asOf": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What to cite: registry (ONRC snapshot date), financialYear (fiscal year of the figures), anaf (day of the ANAF data), snapshot, published, source."
+          },
+          "fields": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The company fields kept when fields or compact trimmed the rows.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Notes on how the request was read (a clamped limit, a widened CAEN code, an ignored field).",
+            "items": {
+              "type": "string"
+            }
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "Firms where a person with this name is director or representative.",
+        "additionalProperties": true
+      },
+      "title": "Find companies by director"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": "Extract contacts from a website"
+      },
+      "description": "Crawl a company website and extract emails, phone numbers and social profiles. Accepts a bare domain or a full URL; max_pages (1-20, default 5) bounds the crawl.",
+      "inputSchema": {
+        "properties": {
+          "website": {
+            "description": "The website to crawl: a bare domain ('example.com') or a full URL ('https://example.com').",
+            "title": "Website",
+            "type": "string"
+          },
+          "max_pages": {
+            "default": 5,
+            "description": "Maximum number of pages to crawl (1-20, default 5).",
+            "title": "Max Pages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "website"
+        ],
+        "type": "object",
+        "title": "extract_contactsArguments"
+      },
+      "name": "extract_contacts",
+      "outputSchema": {
+        "properties": {
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The start URL crawled."
+          },
+          "domain": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The site's registrable domain."
+          },
+          "pagesCrawled": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Pages read."
+          },
+          "emails": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Addresses on the site's own domain.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "otherEmails": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Other addresses found on the site.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "phones": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Phone numbers found.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "facebook": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Facebook profile."
+          },
+          "twitter": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "X / Twitter profile."
+          },
+          "instagram": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Instagram profile."
+          },
+          "linkedin": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "LinkedIn page."
+          },
+          "youtube": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "YouTube channel."
+          },
+          "github": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "GitHub profile."
+          },
+          "socialLinks": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Every social link found, best first.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "Contacts found on a website.",
+        "additionalProperties": true
+      },
+      "title": "Extract contacts from a website"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": "Company profile with website contacts"
+      },
+      "description": "A whole-firm profile in one call: the ONRC registry record plus the contacts discovered on that firm's website, each labelled with a confidence and a source. Prefer this over lookup_business followed by extract_contacts when you want everything about one company. cui is its tax code; website overrides the registered one; max_pages bounds the crawl; refresh=true crawls now instead of answering from the cache.",
+      "inputSchema": {
+        "properties": {
+          "cui": {
+            "description": "Romanian tax identification number (CUI), e.g. '2816464'; 'RO' and leading zeros are accepted.",
+            "title": "Cui",
+            "type": "string"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional website override (domain or URL). When omitted, the firm's registered website is used (an error if none is on file).",
+            "title": "Website"
+          },
+          "max_pages": {
+            "default": 5,
+            "description": "Maximum number of pages to crawl (1-20, default 5).",
+            "title": "Max Pages",
+            "type": "integer"
+          },
+          "refresh": {
+            "default": false,
+            "description": "true crawls now even if a cached result exists (default false: answer from the cache when there is one).",
+            "title": "Refresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "cui"
+        ],
+        "type": "object",
+        "title": "enrich_companyArguments"
+      },
+      "name": "enrich_company",
+      "outputSchema": {
+        "properties": {
+          "cui": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The firm's CUI."
+          },
+          "company": {
+            "type": "object",
+            "description": "A company record: companyName, cui, registrationCode, registrationDate (DD/MM/YYYY), legalForm, euid, address, county, city, website, phone, caenActivities [{code, activity}], directors, status [{code, name}], latestFinancials {year, revenue, netResult, employees; RON}, anaf {mainCaen, vatPayer, eFactura, inactive}, risk {level, label, reasons, isLead}, source, asOf, and score/match on name searches. With fields or compact, only the requested keys.",
+            "additionalProperties": true
+          },
+          "website": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The website crawled."
+          },
+          "websiteSource": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Where the website came from: registry or override."
+          },
+          "contacts": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Contacts found, each with type, value, confidence and source."
+          },
+          "pagesCrawled": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Pages read."
+          },
+          "crawlError": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why the crawl failed, if it did."
+          },
+          "cacheHit": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when answered from the cache."
+          },
+          "crawled": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when the site was crawled for this answer."
+          },
+          "asOf": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What to cite: registry (ONRC snapshot date), financialYear (fiscal year of the figures), anaf (day of the ANAF data), snapshot, published, source."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "The firm's registry record plus the contacts found on its website.",
+        "additionalProperties": true
+      },
+      "title": "Company profile with website contacts"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true,
+        "title": "Domain WHOIS, DNS and email audit"
+      },
+      "description": "WHOIS plus DNS records (A, MX, NS, TXT) and an SPF/DMARC email-security audit for a domain. Use it to profile a company's web estate or check its email posture. include_dns and include_security toggle the two halves.",
+      "inputSchema": {
+        "properties": {
+          "domain": {
+            "description": "Domain name to look up (e.g. 'example.com'); a URL is reduced to its host.",
+            "title": "Domain",
+            "type": "string"
+          },
+          "include_dns": {
+            "default": true,
+            "description": "Include DNS records (A, AAAA, MX, NS, TXT, SOA); default true.",
+            "title": "Include Dns",
+            "type": "boolean"
+          },
+          "include_security": {
+            "default": true,
+            "description": "Include the SPF/DMARC email-security check; default true.",
+            "title": "Include Security",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "domain"
+        ],
+        "type": "object",
+        "title": "lookup_domainArguments"
+      },
+      "name": "lookup_domain",
+      "outputSchema": {
+        "properties": {
+          "domain": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The normalised domain."
+          },
+          "whois": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "registrar, creationDate, expirationDate, updatedDate, nameServers, registrantOrg, registrantCountry."
+          },
+          "dns": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Records by type: A, AAAA, MX, NS, TXT, SOA."
+          },
+          "security": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "hasSPF, spf, hasDMARC, dmarc."
+          },
+          "resolvedIP": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "An address the domain resolves to."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "WHOIS, DNS records and the SPF/DMARC audit of a domain.",
+        "additionalProperties": true
+      },
+      "title": "Domain WHOIS, DNS and email audit"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Annual financial statements"
+      },
+      "description": "Annual financial statements for a Romanian company from Ministry of Finance filings, every fiscal year on record since 2008: revenue, profit, headcount and balance-sheet lines in RON with each year's ratios (growth, margins, equity ratio, liquidity), plus a summary (3/5/10-year CAGR, loss years, health score). Resolve the firm with lookup_business first if you only have a name.",
+      "inputSchema": {
+        "properties": {
+          "cui": {
+            "description": "Romanian tax identification number (CUI), e.g. '2816464'; 'RO' and leading zeros are accepted.",
+            "title": "Cui",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cui"
+        ],
+        "type": "object",
+        "title": "lookup_financialsArguments"
+      },
+      "name": "lookup_financials",
+      "outputSchema": {
+        "properties": {
+          "cui": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The firm's CUI."
+          },
+          "found": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Whether any filing is on record."
+          },
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Number of fiscal years returned."
+          },
+          "years": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Per fiscal year: revenue, profit, loss, netResult, employees, assets, debt, equity (RON) and that year's ratios."
+          },
+          "summary": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "History, revenue growth (3/5/10-year CAGR), latest ratios, health score and band, flags."
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Data source: onrc (registry) or mfp (Ministry of Finance filings)."
+          },
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The credit line to keep when redistributing the data (CC BY 4.0)."
+          },
+          "asOf": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What to cite: registry (ONRC snapshot date), financialYear (fiscal year of the figures), anaf (day of the ANAF data), snapshot, published, source."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "Every annual filing on record for the firm, newest first (RON).",
+        "additionalProperties": true
+      },
+      "title": "Annual financial statements"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Financial ratios and health score"
+      },
+      "description": "Derived financial intelligence for a Romanian company: multi-year revenue trend (YoY, 3/5/10-year CAGR), margins, headcount, solvency and liquidity ratios, a 0-100 health score with its rule-by-rule breakdown, red flags, and peer percentiles within the same CAEN activity and county. Verdict: 'growing', 'stable' or 'distressed'. Use lookup_financials for the raw figures.",
+      "inputSchema": {
+        "properties": {
+          "cui": {
+            "description": "Romanian tax identification number (CUI), e.g. '2816464'; 'RO' and leading zeros are accepted.",
+            "title": "Cui",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cui"
+        ],
+        "type": "object",
+        "title": "lookup_financial_ratiosArguments"
+      },
+      "name": "lookup_financial_ratios",
+      "outputSchema": {
+        "properties": {
+          "cui": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The firm's CUI."
+          },
+          "found": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Whether any filing is on record."
+          },
+          "verdict": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "growing, stable or distressed."
+          },
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Number of fiscal years used."
+          },
+          "years": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Per fiscal year figures and margins."
+          },
+          "revenueTrend": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Latest revenue, YoY growth, 3/5/10-year CAGR, trend label."
+          },
+          "headcount": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Latest headcount and its change."
+          },
+          "ratios": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Margins, equity ratio, debt to equity, liquidity, returns."
+          },
+          "history": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Years on record, loss years, revenue peak."
+          },
+          "healthScore": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "0-100 score, band and its rule-by-rule components."
+          },
+          "flags": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Red flags."
+          },
+          "peers": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Percentiles within the same CAEN activity and county."
+          },
+          "distress": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when the distress signals fire."
+          },
+          "signals": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "The distress signals found."
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Data source: onrc (registry) or mfp (Ministry of Finance filings)."
+          },
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The credit line to keep when redistributing the data (CC BY 4.0)."
+          },
+          "asOf": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What to cite: registry (ONRC snapshot date), financialYear (fiscal year of the figures), anaf (day of the ANAF data), snapshot, published, source."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "Derived financial intelligence and a verdict.",
+        "additionalProperties": true
+      },
+      "title": "Financial ratios and health score"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Watch a company for changes"
+      },
+      "description": "Register a company (by CUI) to monitor. Stores a fingerprint of its current registry record as the baseline; poll_watchlist then reports changes between monthly ONRC snapshots - a new director, a new CAEN activity, an address or status change - and when ANAF declares it fiscally inactive or its VAT status flips.",
+      "inputSchema": {
+        "properties": {
+          "cui": {
+            "description": "Romanian tax identification number (CUI) of the firm to watch, e.g. '2816464'. Watching a firm you already watch changes nothing.",
+            "title": "Cui",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cui"
+        ],
+        "type": "object",
+        "title": "watch_companyArguments"
+      },
+      "name": "watch_company",
+      "outputSchema": {
+        "properties": {
+          "ok": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when the watch is in place."
+          },
+          "alreadyWatching": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when you already held this watch (nothing changed)."
+          },
+          "watch": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "kind, target, owner (key prefix), county, baseline."
+          },
+          "asOf": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What to cite: registry (ONRC snapshot date), financialYear (fiscal year of the figures), anaf (day of the ANAF data), snapshot, published, source."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "The watch registered (or already held) for the firm.",
+        "additionalProperties": true
+      },
+      "title": "Watch a company for changes"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Watch an activity for new firms"
+      },
+      "description": "Watch a CAEN activity code, optionally scoped to one county, for newly registered firms. A registration-date cutoff is the baseline: only firms registered after it are reported, and poll_watchlist slides the cutoff forward so each new firm surfaces once. A retired CAEN Rev.2 code (6201) also watches its Rev.3 successor (6210), with a warning.",
+      "inputSchema": {
+        "properties": {
+          "code": {
+            "description": "CAEN activity code to watch (e.g. '6210'); a retired Rev.2 code also watches its Rev.3 successor.",
+            "title": "Code",
+            "type": "string"
+          },
+          "county": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional county name to scope the watch to (diacritic-insensitive); omit to watch nationwide.",
+            "title": "County"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "title": "watch_caenArguments"
+      },
+      "name": "watch_caen",
+      "outputSchema": {
+        "properties": {
+          "ok": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when the watch is in place."
+          },
+          "alreadyWatching": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when you already held this watch (nothing changed)."
+          },
+          "watch": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "kind, target, owner (key prefix), county, baseline."
+          },
+          "warnings": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Notes on how the request was read (a clamped limit, a widened CAEN code, an ignored field).",
+            "items": {
+              "type": "string"
+            }
+          },
+          "asOf": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What to cite: registry (ONRC snapshot date), financialYear (fiscal year of the figures), anaf (day of the ANAF data), snapshot, published, source."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "The watch registered (or already held) for the activity code.",
+        "additionalProperties": true
+      },
+      "title": "Watch an activity for new firms"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Collect watchlist changes"
+      },
+      "description": "Collect everything the watch tools have found: call it to drain the changeset for every watch owned by your API key, most severe first. Company watches return an 'updated' entry with the changed fields and risk; CAEN and county watches return the 'new' firms registered since the last poll (200 a poll, the rest next).",
+      "inputSchema": {
+        "properties": {},
+        "type": "object",
+        "title": "poll_watchlistArguments"
+      },
+      "name": "poll_watchlist",
+      "outputSchema": {
+        "properties": {
+          "ok": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when the poll ran."
+          },
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Number of watches with news."
+          },
+          "watches": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Per watch: an 'updated' company with its changed fields and risk, or the 'new' firms registered in a watched activity."
+          },
+          "owner": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Whose watches these are (key prefix or IP)."
+          },
+          "email_alerts": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "How to get the same changes by email."
+          },
+          "asOf": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What to cite: registry (ONRC snapshot date), financialYear (fiscal year of the figures), anaf (day of the ANAF data), snapshot, published, source."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "What changed for your watches since the last poll, most severe first.",
+        "additionalProperties": true
+      },
+      "title": "Collect watchlist changes"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Show my daily allowance"
+      },
+      "description": "Show your own allowance: plan, daily limit, lookups used today, how many remain, when it resets (00:00 UTC) and any credit balance. Free and never counted as a lookup. Limits: 5 lookups a day anonymously, 25 with a free API key from https://leadgen.adrianhomelab.com/start (an email address, no payment).",
+      "inputSchema": {
+        "properties": {},
+        "type": "object",
+        "title": "get_usageArguments"
+      },
+      "name": "get_usage",
+      "outputSchema": {
+        "properties": {
+          "identity": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Who is counted: kind (key or anonymous) and counted_as."
+          },
+          "plan": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Plan name (free, pro, business)."
+          },
+          "daily_limit": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Lookups allowed per UTC day."
+          },
+          "used_today": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Lookups used today."
+          },
+          "remaining": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Lookups left today."
+          },
+          "resets_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "When the allowance resets (ISO 8601, 00:00 UTC)."
+          },
+          "resets_in_seconds": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Seconds until the reset."
+          },
+          "suspended": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "true when the key is suspended."
+          },
+          "counted": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Always false: this call is not counted."
+          },
+          "links": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "get_a_key, pricing, docs."
+          },
+          "entitlements": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "What the plan includes."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "Your plan, daily allowance and what is left today.",
+        "additionalProperties": true
+      },
+      "title": "Show my daily allowance"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Report missing or wrong data"
+      },
+      "description": "Tell the Leadgen founder what is missing or wrong: a missing field, firm or source (kind 'gap'), a wrong company record ('wrong_record', pass its cui), a bug, an idea. Free, never counted as a lookup. contact is optional (an address for a reply); nothing is mailed to it automatically. Registry records are corrected at the source (ONRC) and arrive with the next snapshot.",
+      "inputSchema": {
+        "properties": {
+          "message": {
+            "description": "The report, in plain words: what is missing or wrong.",
+            "title": "Message",
+            "type": "string"
+          },
+          "kind": {
+            "default": "gap",
+            "description": "One of 'gap' (a missing field, firm or source; the default), 'wrong_record' (pass its cui), 'bug', 'idea', 'other'.",
+            "title": "Kind",
+            "type": "string"
+          },
+          "cui": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional CUI of the firm the report is about (for 'wrong_record').",
+            "title": "Cui"
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional email address for a reply; nothing is mailed to it automatically.",
+            "title": "Contact"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "title": "report_issueArguments"
+      },
+      "name": "report_issue",
+      "outputSchema": {
+        "properties": {
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "received."
+          },
+          "id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The report's id."
+          },
+          "kind": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The kind filed."
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "For wrong_record: how registry records get corrected."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set only when there is no answer (empty_query, invalid_cui, data_unavailable, plan_required ...); such a call is not counted."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A sentence for the caller."
+          }
+        },
+        "type": "object",
+        "description": "The receipt for the report.",
+        "additionalProperties": true
+      },
+      "title": "Report missing or wrong data"
+    }
+  ]
+}

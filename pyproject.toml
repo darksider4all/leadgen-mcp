@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "leadgen-mcp"
+version = "0.1.0"
+description = "Open-source local MCP server for Leadgen: Romanian company data (ONRC, ANAF, financial statements) through Leadgen's public REST API."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.10"
+authors = [{ name = "Adrian Oaida" }]
+keywords = ["mcp", "model-context-protocol", "romania", "onrc", "anaf", "company-registry", "cui", "caen"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Operating System :: OS Independent",
+  "Topic :: Office/Business",
+]
+dependencies = [
+  "mcp==1.30.0",
+  "httpx>=0.27,<1",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "respx>=0.22"]
+
+[project.scripts]
+leadgen-mcp = "leadgen_mcp.server:main"
+
+[project.urls]
+Homepage = "https://leadgen.adrianhomelab.com"
+Documentation = "https://leadgen.adrianhomelab.com/docs"
+Repository = "https://github.com/darksider4all/leadgen-mcp"
+
+[tool.setuptools]
+packages = ["leadgen_mcp"]
+
+[tool.setuptools.package-data]
+leadgen_mcp = ["tools.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
