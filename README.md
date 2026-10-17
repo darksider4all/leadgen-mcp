@@ -117,8 +117,7 @@ Leave `LEADGEN_API_KEY` out to use the 5 anonymous lookups a day. Once the packa
 How it relates to the hosted server: same tools, same data, and the same daily allowance
 (one allowance per key, or per IP without one, whichever door the call comes through). A refusal (no key, daily limit, suspended key) comes back as a tool
 error that keeps the server's message and the link to a free key; for the daily limit it says when it
-resets (00:00 UTC). `poll_watchlist` reads the changes and then marks them seen, as the hosted tool
-does, which over REST takes two calls, so a poll with news counts as two lookups. Watches need a key.
+resets (00:00 UTC). The key is sent as the `X-API-Key` header, only when it is set. Watches need a key.
 
 Development: `pip install -e ".[test]" && pytest` (no network); `LEADGEN_LIVE=1 pytest tests/test_live.py`
 makes one real anonymous lookup; `LEADGEN_DRIFT=1 pytest tests/test_drift.py` compares `tools.json`

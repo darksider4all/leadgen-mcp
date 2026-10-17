@@ -55,11 +55,8 @@ class Config:
             "User-Agent": f"leadgen-mcp/{__version__} (+https://github.com/darksider4all/leadgen-mcp)",
         }
         if self.api_key:
-            # The REST API reads X-API-Key; Authorization: Bearer is what the hosted MCP
-            # server reads. Both carry the same key, and neither is sent without one
-            # (an empty key header is refused).
+            # X-API-Key is the header the REST docs name; it is never sent empty.
             headers["X-API-Key"] = self.api_key
-            headers["Authorization"] = f"Bearer {self.api_key}"
         if self.source:
             headers["X-Leadgen-Source"] = self.source
         return headers

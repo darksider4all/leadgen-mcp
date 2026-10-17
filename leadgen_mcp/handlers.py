@@ -132,52 +132,11 @@ async def watch_caen(api: LeadgenAPI, args: dict[str, Any]) -> dict:
     return _watch_answer(body, "invalid_code")
 
 
-_NEWS_KEYS = ("updated", "new", "changes", "changed", "newFirms", "events")
-
-
-def _has_news(watch: dict) -> bool | None:
-    """True/False when the entry says whether it changed; None when it does not say."""
-    known = False
-    for key in _NEWS_KEYS:
-        if key in watch:
-            known = True
-            if watch[key]:
-                return True
-    for key in ("hasChanges", "changed"):
-        if isinstance(watch.get(key), bool):
-            return watch[key]
-    if str(watch.get("status", "")).lower() in ("updated", "new"):
-        return True
-    return False if known else None
-
-
 async def poll_watchlist(api: LeadgenAPI, args: dict[str, Any]) -> dict:
-    """GET /watches (a peek), then POST /watches/seen (the drain), as the MCP tool does in one."""
-    peek = await api.request("GET", "/watches")
-    if peek.get("error"):
-        return peek
-    watches = next((peek[key] for key in ("watches", "results", "items")
-                    if isinstance(peek.get(key), list)), [])
-    flags = [_has_news(w) if isinstance(w, dict) else None for w in watches]
-    if any(flag is not None for flag in flags):
-        news = [w for w, flag in zip(watches, flags) if flag]
-    else:
-        news = list(watches)
-    answer: dict[str, Any] = {"ok": True, "total": len(news), "watches": news}
-    for key, alias in (("owner", None), ("email_alerts", "emailAlerts"), ("asOf", None)):
-        value = peek.get(key, peek.get(alias) if alias else None)
-        if value is not None:
-            answer[key] = value
-    warnings = list(peek.get("warnings") or [])
-    if news:
-        try:
-            await api.request("POST", "/watches/seen")
-        except ToolError as exc:
-            warnings.append("These changes could not be marked as seen and will show again "
-                            f"on the next poll: {str(exc).splitlines()[0]}")
-    if warnings:
-        answer["warnings"] = warnings
-    return answer
+    """POST /watches/seen drains the changes and returns them: the MCP tool's answer plus
+    `ok` and `cleared`, which the REST route adds and are dropped here."""
+    body = await api.request("POST", "/watches/seen")
+    return {k: v for k, v in body.items() if k not in ("ok", "cleared")}
 
 
 HANDLERS: dict[str, Handler] = {

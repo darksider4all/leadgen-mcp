@@ -35,16 +35,21 @@ async def test_no_key_sends_no_auth_headers():
     assert request.headers["user-agent"].startswith("leadgen-mcp/")
 
 
-async def test_key_is_sent_as_bearer_and_x_api_key():
+async def test_key_is_sent_as_x_api_key_only():
     request = await _usage_request(api_key="test-key-123")
-    assert request.headers["authorization"] == "Bearer test-key-123"
     assert request.headers["x-api-key"] == "test-key-123"
+    assert "authorization" not in request.headers
+
+
+async def test_blank_key_sends_no_header():
+    request = await _usage_request(api_key="")
+    assert "x-api-key" not in request.headers and "authorization" not in request.headers
 
 
 def test_config_from_env():
     config = Config.from_env({"LEADGEN_API_KEY": "   ", "LEADGEN_API_URL": "http://localhost:9/",
                               "LEADGEN_SOURCE": "cursor"})
-    assert config.api_key == "" and "Authorization" not in config.headers()
+    assert config.api_key == "" and "X-API-Key" not in config.headers()
     assert config.api_url == "http://localhost:9" and config.source == "cursor"
     defaults = Config.from_env({})
     assert defaults.api_url == "https://leadgen.adrianhomelab.com" and defaults.source == "glama"

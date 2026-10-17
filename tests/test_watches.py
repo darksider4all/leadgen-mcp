@@ -86,52 +86,27 @@ async def test_watch_without_a_key_is_a_clear_error():
     assert '"detail"' not in text
 
 
-async def test_poll_reads_then_marks_seen_and_keeps_only_news():
-    peek = {"owner": "key abc", "email_alerts": "POST /alerts/email", "asOf": {"registry": "2026-09-02"},
-            "watches": [
-                {"kind": "company", "target": "2816464", "updated": {"changed": ["address"]}},
-                {"kind": "caen", "target": "6210", "new": []},
-                {"kind": "caen", "target": "4321", "new": [{"cui": "1"}]},
-            ]}
-    with respx.mock(base_url=API) as router:
-        get = router.get("/watches").mock(return_value=httpx.Response(200, json=peek))
-        seen = router.post("/watches/seen").mock(return_value=httpx.Response(200, json={"ok": True, "total": 2}))
-        result = await call_tool("poll_watchlist", {}, **KEY)
-        assert get.called and seen.called
-        assert get.calls.last.request.headers["x-api-key"] == "test-key-123"
-        # the read comes before the drain
-        assert router.calls[0].request.method == "GET" and router.calls[1].request.method == "POST"
-    data = result.structuredContent
-    assert data["ok"] is True and data["total"] == 2
-    assert [w["target"] for w in data["watches"]] == ["2816464", "4321"]
-    assert data["owner"] == "key abc" and data["email_alerts"] == "POST /alerts/email"
-    assert data["asOf"] == {"registry": "2026-09-02"}
-
-
-async def test_poll_with_nothing_new_does_not_drain():
-    peek = {"watches": [{"kind": "company", "target": "1", "updated": None}]}
+async def test_poll_is_one_drain_call_without_ok_and_cleared():
+    drained = {"total": 1, "owner": "key abc", "email_alerts": "POST /alerts/email",
+               "asOf": {"registry": "2026-09-02"},
+               "watches": [{"kind": "caen", "target": "4321", "new": [{"cui": "1"}]}]}
     with respx.mock(base_url=API, assert_all_called=False) as router:
-        router.get("/watches").mock(return_value=httpx.Response(200, json=peek))
-        seen = router.post("/watches/seen").mock(return_value=httpx.Response(200, json={}))
+        seen = router.post("/watches/seen").mock(
+            return_value=httpx.Response(200, json={"ok": True, "cleared": 1, **drained}))
+        get = router.get("/watches").mock(return_value=httpx.Response(200, json={}))
         result = await call_tool("poll_watchlist", {}, **KEY)
-        assert not seen.called
-    assert result.structuredContent == {"ok": True, "total": 0, "watches": []}
+        assert len(router.calls) == 1 and seen.called and not get.called
+        request = seen.calls.last.request
+        assert request.headers["x-api-key"] == "test-key-123"
+        assert "authorization" not in request.headers
+    assert not result.isError
+    assert result.structuredContent == drained
 
 
-async def test_poll_reports_a_failed_drain_but_keeps_the_changes():
-    peek = {"watches": [{"kind": "company", "target": "1", "updated": {"x": 1}}]}
+async def test_poll_without_a_key_is_a_clear_error():
+    body = {"error": "api_key_required", "message": "A watchlist belongs to an API key: send it as X-API-Key.",
+            "get_a_key": "https://leadgen.adrianhomelab.com/start"}
     with respx.mock(base_url=API) as router:
-        router.get("/watches").mock(return_value=httpx.Response(200, json=peek))
-        router.post("/watches/seen").mock(side_effect=httpx.ConnectError("boom"))
-        result = await call_tool("poll_watchlist", {}, **KEY)
-    data = result.structuredContent
-    assert data["total"] == 1 and "show again" in data["warnings"][0]
-
-
-async def test_poll_accepts_a_bare_list_from_the_api():
-    peek = [{"kind": "company", "target": "1", "updated": {"x": 1}}]
-    with respx.mock(base_url=API) as router:
-        router.get("/watches").mock(return_value=httpx.Response(200, json=peek))
-        router.post("/watches/seen").mock(return_value=httpx.Response(200, json={}))
-        result = await call_tool("poll_watchlist", {}, **KEY)
-    assert result.structuredContent == {"ok": True, "total": 1, "watches": peek}
+        router.post("/watches/seen").mock(return_value=httpx.Response(401, json=body))
+        result = await call_tool("poll_watchlist", {})
+    assert result.isError and "api_key_required" in result.content[0].text
