@@ -1,0 +1,5 @@
+This licence covers the contents of this repository (README, server.json,
+glama.json and the skills/ folder). The Leadgen server's source code is not
+part of this repository and is not licensed here. The data the server returns
+comes from ONRC, the Ministry of Finance and ANAF under their own terms
+(see the README and https://leadgen.adrianhomelab.com/docs).
