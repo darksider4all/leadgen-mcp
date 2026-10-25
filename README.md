@@ -7,7 +7,7 @@ registry: **4.2M firms** from ONRC, the ANAF fiscal layer (VAT, e-Factura, fisca
 and **18 years of financial statements** (Ministry of Finance, 2008–2025) with ratios and peer benchmarks.
 
 - **Endpoint:** `https://leadgen-mcp.adrianhomelab.com/mcp` (Streamable HTTP)
-- **Free:** 5 lookups a day without a key, **25 a day with a free key** from
+- **Free:** 30 lookups a day without a key, **50 a day with a free key** from
   <https://leadgen.adrianhomelab.com/start> — send it as `Authorization: Bearer <key>` (or `X-API-Key`).
 - **REST API and docs:** <https://leadgen.adrianhomelab.com/docs> · **for LLMs:** <https://leadgen.adrianhomelab.com/llms.txt>
 - **Server card:** <https://leadgen-mcp.adrianhomelab.com/.well-known/mcp/server-card.json> ·
@@ -53,7 +53,8 @@ URL `https://leadgen-mcp.adrianhomelab.com/mcp`, no sign-in; add the `Authorizat
 { "servers": { "leadgen": { "type": "http", "url": "https://leadgen-mcp.adrianhomelab.com/mcp", "headers": { "Authorization": "Bearer <your key>" } } } }
 ```
 
-Without a key every client works for 5 calls a day; `get_usage` tells you what is left.
+Without a key every client works for 30 calls a day; `get_usage` tells you what is left. Current limits:
+<https://leadgen.adrianhomelab.com/en/docs>.
 
 ## Run locally (open client)
 
@@ -84,7 +85,7 @@ or run it in Docker: `docker build -t leadgen-mcp .` then `docker run -i --rm -e
 
 | Variable | Default | What it does |
 |---|---|---|
-| `LEADGEN_API_KEY` | none | Your free key from <https://leadgen.adrianhomelab.com/start> (25 lookups a day instead of 5). Optional; sent only when set. |
+| `LEADGEN_API_KEY` | none | Your free key from <https://leadgen.adrianhomelab.com/start> (50 lookups a day instead of the REST API's 5). Optional; sent only when set. |
 | `LEADGEN_SOURCE` | `glama` | A channel tag sent with each request (`X-Leadgen-Source` header and `src` parameter), so Leadgen knows where its users come from. |
 | `LEADGEN_API_URL` | `https://leadgen.adrianhomelab.com` | REST API base URL. |
 | `LEADGEN_TIMEOUT` | `60` | Seconds to wait for an answer (website crawls can take a while). |
@@ -117,10 +118,11 @@ or run it in Docker: `docker build -t leadgen-mcp .` then `docker run -i --rm -e
 }
 ```
 
-Leave `LEADGEN_API_KEY` out to use the 5 anonymous lookups a day.
+Leave `LEADGEN_API_KEY` out to use the REST API's 5 anonymous lookups a day.
 
-How it relates to the hosted server: same tools, same data, and the same daily allowance
-(one allowance per key, or per IP without one, whichever door the call comes through). A refusal (no key, daily limit, suspended key) comes back as a tool
+How it relates to the hosted server: same tools and same data. This client calls the REST API,
+whose anonymous allowance is smaller than the MCP endpoint's (5 a day against 30, counted per door
+and per IP); a free key gives 50 a day. A refusal (no key, daily limit, suspended key) comes back as a tool
 error that keeps the server's message and the link to a free key; for the daily limit it says when it
 resets (00:00 UTC). The key is sent as the `X-API-Key` header, only when it is set. Watches need a key.
 
@@ -162,7 +164,7 @@ fiscal data: ANAF. When you publish data obtained through Leadgen, credit it as:
 ## Romanian
 
 Server MCP pentru registrul oficial al firmelor din România (ONRC, ANAF, bilanțuri 2008–2025).
-Gratuit: 5 interogări pe zi fără cheie, 25 de interogări pe zi cu o cheie gratuită de la
+Gratuit: 30 de interogări pe zi fără cheie (5 prin API-ul REST), 50 pe zi cu o cheie gratuită de la
 <https://leadgen.adrianhomelab.com/start>. Documentație: <https://leadgen.adrianhomelab.com/docs>.
 
 ## Contact
