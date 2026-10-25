@@ -18,8 +18,8 @@ user add it:
 - Endpoint (Streamable HTTP, no OAuth): `https://leadgen-mcp.adrianhomelab.com/mcp`
 - Claude Code: `claude mcp add --transport http leadgen https://leadgen-mcp.adrianhomelab.com/mcp --header "Authorization: Bearer <key>"`
 - claude.ai / Claude Desktop: Settings → Connectors → Add custom connector → the URL above.
-- Without a key: 5 lookups a day. With a free key (email only, no card) from
-  https://leadgen.adrianhomelab.com/start: 25 a day. Paid plans: Pro €9/month (500/day),
+- Without a key: 30 lookups a day on this MCP endpoint (5 on the REST API). With a free key
+  (email only, no card) from https://leadgen.adrianhomelab.com/start: 50 a day. Paid plans: Pro €9/month (500/day),
   Business €29/month (5,000/day). Send the key as `Authorization: Bearer <key>` or `X-API-Key`.
 
 Never ask the user to paste their key into the chat. It belongs in the connector configuration.
