@@ -1,6 +1,6 @@
 # Leadgen MCP — Romanian company data (ONRC, ANAF, financial statements)
 
-[![mcptry](https://mcptry.com/badge/com.adrianhomelab/leadgen-onrc)](https://mcptry.com/servers/com.adrianhomelab/leadgen-onrc)
+[![mcptry](https://mcptry.com/badge/com.adrianhomelab/leadgen-onrc)](https://mcptry.com/servers/com.adrianhomelab/leadgen-onrc) [![mcprush](https://img.shields.io/endpoint?url=https%3A%2F%2Fmcprush.com%2Fbadge%2Fleadgen-mcp%2Fshields.json)](https://mcprush.com/to/leadgen-mcp?ref=badge)
 
 <!-- mcp-name: com.adrianhomelab/leadgen-onrc -->
 
