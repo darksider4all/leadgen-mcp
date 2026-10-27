@@ -1,5 +1,7 @@
 # Leadgen MCP — Romanian company data (ONRC, ANAF, financial statements)
 
+[![mcptry](https://mcptry.com/badge/com.adrianhomelab/leadgen-onrc)](https://mcptry.com/servers/com.adrianhomelab/leadgen-onrc)
+
 <!-- mcp-name: com.adrianhomelab/leadgen-onrc -->
 
 A remote [Model Context Protocol](https://modelcontextprotocol.io) server for Romania's official business
