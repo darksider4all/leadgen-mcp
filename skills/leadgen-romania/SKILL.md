@@ -109,7 +109,7 @@ watches you set for a one-off check. Watches need a key.
   `lookup_by_category` list carries `appUrl`, the same list opened in the Leadgen app. Pass both on
   as they are.
 - **Limits.** When a call is refused for the daily limit (`daily_limit_reached`, MCP error -32002),
-  quote the limit from the refusal, say when it resets (00:00 UTC) and give the `get_a_key` link it
+  quote the limit from the refusal, say when it resets (midnight Romanian time, 00:00 Europe/Bucharest) and give the `get_a_key` link it
   carries. Don't retry in a loop.
 - **Plans.** If a tool answers `error: plan_required`, explain that the feature needs a paid plan and
   show the `upgrade` link from the answer. Don't work around it with many smaller calls.

@@ -126,7 +126,7 @@ How it relates to the hosted server: same tools and same data. This client calls
 whose anonymous allowance is smaller than the MCP endpoint's (5 a day against 30, counted per door
 and per IP); a free key gives 50 a day. A refusal (no key, daily limit, suspended key) comes back as a tool
 error that keeps the server's message and the link to a free key; for the daily limit it says when it
-resets (00:00 UTC). The key is sent as the `X-API-Key` header, only when it is set. Watches need a key.
+resets (midnight Romanian time, 00:00 Europe/Bucharest). The key is sent as the `X-API-Key` header, only when it is set. Watches need a key.
 
 Development: `pip install -e ".[test]" && pytest` (no network); `LEADGEN_LIVE=1 pytest tests/test_live.py`
 makes one real anonymous lookup; `LEADGEN_DRIFT=1 pytest tests/test_drift.py` compares `tools.json`
@@ -151,7 +151,7 @@ with the live server card; `python scripts/check_public.py` checks that nothing 
 | `watch_caen` | Watch a CAEN activity code, optionally scoped to one county, for newly registered firms. |
 | `poll_watchlist` | Collect everything the watch tools have found: call it to drain the changeset for every watch owned by your API key, most severe first. |
 | `unwatch` | Stop watching a firm (`cui`) or a CAEN code (`code`, with its `county` if it had one). A watch you do not hold answers `removed: 0`. |
-| `get_usage` | Show your own allowance: plan, daily limit, lookups used today, how many remain, when it resets (00:00 UTC) and any credit balance. |
+| `get_usage` | Show your own allowance: plan, daily limit, lookups used today, how many remain, when it resets (midnight Romanian time, 00:00 Europe/Bucharest) and any credit balance. |
 | `report_issue` | Tell the Leadgen founder what is missing or wrong: a missing field, firm or source (kind 'gap'), a wrong company record ('wrong_record', pass its cui), a bug, an idea. |
 
 

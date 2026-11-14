@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfoNotFoundError
 
 import httpx
 import pytest
 import respx
 
 from conftest import API, call_tool, json_of
+from leadgen_mcp import api
 from leadgen_mcp.api import Config, _reset_note
 
 pytestmark = pytest.mark.anyio
@@ -72,11 +74,41 @@ async def test_429_says_when_the_limit_resets():
     assert '"detail"' not in text
 
 
-def test_reset_note_falls_back_to_the_next_utc_midnight():
+@pytest.mark.parametrize("now,resets_at,wait", [
+    # summer time (UTC+3): 22:30Z is already 01:30 on the 18th, so the next midnight is the 19th
+    (datetime(2026, 10, 17, 22, 30, tzinfo=timezone.utc), "2026-10-18T21:00:00Z", "22 h 30 min"),
+    # winter time (UTC+2)
+    (datetime(2026, 12, 1, 12, 0, tzinfo=timezone.utc), "2026-12-01T22:00:00Z", "10 h 0 min"),
+    # clocks go forward on 29 Mar 2026: the day before is 24 h, the day itself is 23 h
+    (datetime(2026, 3, 28, 12, 0, tzinfo=timezone.utc), "2026-03-28T22:00:00Z", "10 h 0 min"),
+    (datetime(2026, 3, 29, 0, 0, tzinfo=timezone.utc), "2026-03-29T21:00:00Z", "21 h 0 min"),
+    (datetime(2026, 3, 29, 10, 0, tzinfo=timezone.utc), "2026-03-29T21:00:00Z", "11 h 0 min"),
+    # clocks go back on 25 Oct 2026: the day itself is 25 h
+    (datetime(2026, 10, 24, 12, 0, tzinfo=timezone.utc), "2026-10-24T21:00:00Z", "9 h 0 min"),
+    (datetime(2026, 10, 24, 21, 0, tzinfo=timezone.utc), "2026-10-25T22:00:00Z", "25 h 0 min"),
+    (datetime(2026, 10, 25, 12, 0, tzinfo=timezone.utc), "2026-10-25T22:00:00Z", "10 h 0 min"),
+])
+def test_reset_note_falls_back_to_the_next_romanian_midnight(now, resets_at, wait):
     response = httpx.Response(429, json={})
-    now = datetime(2026, 10, 17, 22, 30, tzinfo=timezone.utc)
     assert _reset_note(response, {}, now) == \
-        "The daily allowance resets at 2026-10-18T00:00:00Z (in 1 h 30 min) (00:00 UTC)."
+        f"The daily allowance resets at {resets_at} (in {wait}) (midnight Romanian time)."
+
+
+def test_reset_note_without_zone_data_uses_utc_plus_2(monkeypatch):
+    def missing(key):
+        raise ZoneInfoNotFoundError(key)
+    monkeypatch.setattr(api, "ZoneInfo", missing)
+    response = httpx.Response(429, json={})
+    now = datetime(2026, 7, 1, 12, 0, tzinfo=timezone.utc)
+    assert _reset_note(response, {}, now) == \
+        "The daily allowance resets at 2026-07-01T22:00:00Z (in 10 h 0 min) (midnight Romanian time)."
+
+
+def test_reset_note_keeps_the_servers_own_time():
+    response = httpx.Response(429, json={})
+    body = {"resets_at": "2026-10-18T21:00:00Z", "resets_in_seconds": 3600}
+    assert _reset_note(response, body) == \
+        "The daily allowance resets at 2026-10-18T21:00:00Z (in 1 h 0 min) (midnight Romanian time)."
 
 
 @pytest.mark.parametrize("status,error,message", [
