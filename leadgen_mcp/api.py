@@ -7,6 +7,7 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import httpx
 
@@ -70,8 +71,22 @@ def _strip_mirror(body: dict) -> dict:
     return body
 
 
+def _next_romanian_midnight(now: datetime) -> datetime:
+    """The next 00:00 Europe/Bucharest after `now`, as an aware UTC datetime.
+
+    Without zone data (Windows without tzdata) it uses a fixed UTC+2, never raises.
+    """
+    try:
+        tz = ZoneInfo("Europe/Bucharest")
+    except (ZoneInfoNotFoundError, ValueError, OSError):
+        tz = timezone(timedelta(hours=2))
+    local = now.astimezone(tz)
+    tomorrow = local.date() + timedelta(days=1)
+    return datetime(tomorrow.year, tomorrow.month, tomorrow.day, tzinfo=tz).astimezone(timezone.utc)
+
+
 def _reset_note(response: httpx.Response, body: dict, now: datetime | None = None) -> str:
-    """When the daily allowance resets, from the body, the RateLimit headers or the UTC day."""
+    """When the daily allowance resets, from the body, the RateLimit headers or the next Romanian midnight."""
     now = now or datetime.now(timezone.utc)
     resets_at = body.get("resets_at") or body.get("resetsAt")
     seconds: float | None = None
@@ -89,14 +104,14 @@ def _reset_note(response: httpx.Response, body: dict, now: datetime | None = Non
         if seconds is not None:
             when = now + timedelta(seconds=seconds)
         else:
-            when = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+            when = _next_romanian_midnight(now)
             seconds = (when - now).total_seconds()
         resets_at = when.strftime("%Y-%m-%dT%H:%M:%SZ")
     note = f"The daily allowance resets at {resets_at}"
     if seconds is not None:
         minutes = max(0, int(seconds // 60))
         note += f" (in {minutes // 60} h {minutes % 60} min)"
-    return note + " (00:00 UTC)."
+    return note + " (midnight Romanian time)."
 
 
 def refusal_text(response: httpx.Response, body: dict, has_key: bool) -> str:

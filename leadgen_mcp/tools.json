@@ -2621,7 +2621,7 @@
         "readOnlyHint": true,
         "title": "Show my daily allowance"
       },
-      "description": "Show your own allowance: plan, daily limit, lookups used today, how many remain, when it resets (00:00 UTC) and any credit balance. Free and never counted as a lookup. Limits: 30 anonymous MCP calls a day, 50 with a free API key from https://leadgen.adrianhomelab.com/start (an email address, no payment).",
+      "description": "Show your own allowance: plan, daily limit, lookups used today, how many remain, when it resets (midnight Romanian time, 00:00 Europe/Bucharest) and any credit balance. Free and never counted as a lookup. Limits: 30 anonymous MCP calls a day, 50 with a free API key from https://leadgen.adrianhomelab.com/start (an email address, no payment).",
       "inputSchema": {
         "properties": {},
         "type": "object",
@@ -2649,7 +2649,7 @@
               "integer",
               "null"
             ],
-            "description": "Lookups allowed per UTC day."
+            "description": "Lookups allowed per day."
           },
           "used_today": {
             "type": [
@@ -2670,7 +2670,7 @@
               "string",
               "null"
             ],
-            "description": "When the allowance resets (ISO 8601, 00:00 UTC)."
+            "description": "When the allowance resets (ISO 8601, midnight Romanian time)."
           },
           "resets_in_seconds": {
             "type": [
