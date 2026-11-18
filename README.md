@@ -10,8 +10,8 @@ and **18 years of financial statements** (Ministry of Finance, 2008–2025) with
 
 - **Endpoint:** `https://leadgen-mcp.adrianhomelab.com/mcp` (Streamable HTTP)
 - **Free:** 30 lookups a day without a key, **50 a day with a free key** from
-  <https://leadgen.adrianhomelab.com/start> — send it as `Authorization: Bearer <key>` (or `X-API-Key`).
-- **REST API and docs:** <https://leadgen.adrianhomelab.com/docs> · **for LLMs:** <https://leadgen.adrianhomelab.com/llms.txt>
+  <https://leadgen-api.adrianhomelab.com/en/start> — send it as `Authorization: Bearer <key>` (or `X-API-Key`).
+- **REST API and docs:** <https://leadgen-api.adrianhomelab.com/en/docs> · **for LLMs:** <https://leadgen.adrianhomelab.com/llms.txt>
 - **Server card:** <https://leadgen-mcp.adrianhomelab.com/.well-known/mcp/server-card.json> ·
   official MCP registry: `com.adrianhomelab/leadgen-onrc`
 
@@ -63,7 +63,7 @@ Without a key every client works for 30 calls a day; `get_usage` tells you what 
 The hosted endpoint above is the main product and the simplest way in. If your client only speaks
 stdio, or you want to run the MCP server yourself, this repository also ships `leadgen-mcp`: a small
 open-source (MIT) local MCP server with the same 17 tools. It holds no data: every tool calls Leadgen's
-public REST API (<https://leadgen.adrianhomelab.com/docs>), so answers, limits and keys are the same as
+public REST API (<https://leadgen-api.adrianhomelab.com/en/docs>), so answers, limits and keys are the same as
 on the hosted server. Tool names, descriptions and schemas are a snapshot of the hosted server's
 `tools/list` (`leadgen_mcp/tools.json`, refreshed with `scripts/sync_tools.py`).
 
@@ -167,7 +167,7 @@ fiscal data: ANAF. When you publish data obtained through Leadgen, credit it as:
 
 Server MCP pentru registrul oficial al firmelor din România (ONRC, ANAF, bilanțuri 2008–2025).
 Gratuit: 30 de interogări pe zi fără cheie (5 prin API-ul REST), 50 pe zi cu o cheie gratuită de la
-<https://leadgen.adrianhomelab.com/start>. Documentație: <https://leadgen.adrianhomelab.com/docs>.
+<https://leadgen-api.adrianhomelab.com/start>. Documentație: <https://leadgen-api.adrianhomelab.com/docs>.
 
 ## Contact
 
