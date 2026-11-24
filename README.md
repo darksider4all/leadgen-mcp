@@ -62,7 +62,7 @@ Without a key every client works for 30 calls a day; `get_usage` tells you what 
 
 The hosted endpoint above is the main product and the simplest way in. If your client only speaks
 stdio, or you want to run the MCP server yourself, this repository also ships `leadgen-mcp`: a small
-open-source (MIT) local MCP server with the same 17 tools. It holds no data: every tool calls Leadgen's
+open-source (MIT) local MCP server with the same 21 tools. It holds no data: every tool calls Leadgen's
 public REST API (<https://leadgen-api.adrianhomelab.com/en/docs>), so answers, limits and keys are the same as
 on the hosted server. Tool names, descriptions and schemas are a snapshot of the hosted server's
 `tools/list` (`leadgen_mcp/tools.json`, refreshed with `scripts/sync_tools.py`).
@@ -151,6 +151,10 @@ with the live server card; `python scripts/check_public.py` checks that nothing 
 | `watch_caen` | Watch a CAEN activity code, optionally scoped to one county, for newly registered firms. |
 | `poll_watchlist` | Collect everything the watch tools have found: call it to drain the changeset for every watch owned by your API key, most severe first. |
 | `unwatch` | Stop watching a firm (`cui`) or a CAEN code (`code`, with its `county` if it had one). A watch you do not hold answers `removed: 0`. |
+| `company_history` | Whether the registry record of one company changed between consecutive official ONRC snapshots, and when: one event per snapshot in which anything on the record moved (status, name, legal form, address, registration number). |
+| `company_contracts` | Public procurement contracts from SEAP, Romania's electronic procurement system: what a company won from public authorities, or what it awarded as a contracting authority. |
+| `check_vat` | Check a Romanian VAT number against the EU's VIES register in real time: is it a valid VAT number today, under which name and address (a company's; never a sole trader's), and does that name agree with the company registry. |
+| `list_watches` | List every company and CAEN activity your API key watches, each with what changed since the last watchlist poll, most severe first. |
 | `get_usage` | Show your own allowance: plan, daily limit, lookups used today, how many remain, when it resets (midnight Romanian time, 00:00 Europe/Bucharest) and any credit balance. |
 | `report_issue` | Tell the Leadgen founder what is missing or wrong: a missing field, firm or source (kind 'gap'), a wrong company record ('wrong_record', pass its cui), a bug, an idea. |
 

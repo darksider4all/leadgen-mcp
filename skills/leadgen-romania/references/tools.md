@@ -21,6 +21,10 @@ CUI, county, city, legal form, risk level, phone, website, latest revenue and he
 | `watch_caen` | `code`*, `county` | New registrations in a code (and county). Needs a key. |
 | `poll_watchlist` | — | Drains every change for the caller's watches, most severe first; `active` lists every watch held. |
 | `unwatch` | `cui` or `code`, `county` | Removes one of the caller's watches (`removed: 0` when not held). |
+| `company_history` | `cui`*, `limit` (1–100, default 50) | One event per ONRC snapshot in which the record changed (status, name, legal form, address, registration number); says that it changed, not which field. |
+| `company_contracts` | `cui`*, `role` (`supplier`, `authority`, `both`), `since`, `until` (YYYY-MM-DD), `limit` (1–200) | SEAP public procurement contracts, newest first, with a per-year summary. |
+| `check_vat` | `cui`* | Live check against the EU VIES register: valid today or not, name and address, and whether the name agrees with the registry. |
+| `list_watches` | — | Every watch the key holds, with what changed since the last poll. Nothing is marked seen. Free. |
 | `get_usage` | — | Plan, daily limit, used today, left, reset time. Free. |
 | `report_issue` | `message`*, `kind` (`gap`, `wrong_record`, `bug`, `idea`), `cui`, `contact` | Free; reaches the founder. |
 

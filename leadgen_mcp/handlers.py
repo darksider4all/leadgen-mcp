@@ -47,6 +47,11 @@ async def lookup_financial_ratios(api: LeadgenAPI, args: dict[str, Any]) -> dict
     return await api.request("GET", f"/financials/{_cui_path(args)}/ratios")
 
 
+async def company_contracts(api: LeadgenAPI, args: dict[str, Any]) -> dict:
+    return await api.request("GET", f"/contracts/{_cui_path(args)}",
+                             params=_pick(args, "role", "since", "until", "limit"))
+
+
 async def report_issue(api: LeadgenAPI, args: dict[str, Any]) -> dict:
     body = _pick(args, "message", "kind", "cui")
     if args.get("contact") is not None:
@@ -183,4 +188,8 @@ HANDLERS: dict[str, Handler] = {
     "unwatch": unwatch,
     "get_usage": _get("/usage"),
     "report_issue": report_issue,
+    "check_vat": _get("/check_vat", "cui"),
+    "company_history": _get("/company_history", "cui", "limit"),
+    "company_contracts": company_contracts,
+    "list_watches": _get("/watches"),
 }
