@@ -3,7 +3,7 @@
   "server": {
     "name": "leadgen",
     "title": "Leadgen MCP - Romanian Business Data (ONRC)",
-    "version": "2.5.9",
+    "version": "2.7.0",
     "websiteUrl": "https://leadgen.adrianhomelab.com/"
   },
   "instructions": "Romanian business data for AI agents: the official ONRC company registry (4.2M companies), Ministry of Finance filings, and website/domain enrichment, all from Romanian government open data loaded locally.\n\nWhich tool: lookup_business for a company by name or CUI (start here); lookup_director when you know a person; lookup_by_category to find companies by activity rather than name; extract_contacts or lookup_domain for a website; lookup_financials and lookup_financial_ratios for money; enrich_company for one company's full profile in a single call. watch_company and watch_caen register monitors, poll_watchlist returns what changed and lists the watches you hold, and unwatch removes one.\n\nSearch is diacritic-insensitive: pass plain ASCII ('paval' matches 'PAVAL').\n\nCite the date: every company result, list, financial answer and watch carries asOf {registry, financialYear, anaf}. When you quote registry data, say it is as of the ONRC snapshot of asOf.registry (e.g. 'as of the ONRC snapshot of 2 Sept 2026'); name asOf.financialYear with figures and asOf.anaf with VAT or inactive status.\n\nCoverage: a first look, not a full check. risk.level 'ok' only means no distress signal in the ONRC statuses and ANAF flags held; the insolvency bulletin (BPI), ANAF tax debts, court cases and shareholders are not checked (risk.notChecked; https://leadgen.adrianhomelab.com/en/coverage?src=mcp-instructions). Never call a company clean, safe or solvent on this data alone: say what was not checked.\n\nLinks to pass on: a company result carries url, its public record page, to share with your user; a lookup_by_category list carries appUrl, which opens the same list in the Leadgen app.\n\nLimits: 30 anonymous MCP calls a day, 50 with a free API key - an email address, no payment - from https://leadgen.adrianhomelab.com/start?src=mcp-instructions. get_usage shows what is left today (free, not counted): tool results carry the allowance only in their _meta (leadgen/usage), which many clients do not show you, so call get_usage when you need the remaining count, e.g. before a long batch. Answers with an error are not counted. report_issue reports what is missing or wrong to the person who runs Leadgen (free, not counted). REST API docs: https://leadgen.adrianhomelab.com/docs?src=mcp-instructions\n\nPlans: free during launch - every tool works within the limits above. When paid plans go live, full financial history, ratios and health score, financial filters (revenue, headcount, VAT) and CSV move to Pro (https://leadgen-checkout.adrianhomelab.com/?src=mcp-instructions); main_activity_only stays free.",
@@ -2865,11 +2865,12 @@
         "readOnlyHint": false,
         "title": "Report missing or wrong data"
       },
-      "description": "Report to the person who runs Leadgen what is missing or wrong: a missing field, company or source (kind 'gap'), a wrong company record ('wrong_record', pass its cui), a bug, an idea. Free, never counted as a lookup. contact is optional (an address for a reply); nothing is mailed to it automatically. Registry records are corrected at the source (ONRC) and arrive with the next snapshot.",
+      "description": "Report to the person who runs Leadgen what is missing or wrong: a missing field, company or source (kind 'gap'), a wrong company record ('wrong_record', pass its cui), a bug, an idea. Free, never counted. contact: optional reply address, never mailed automatically. Registry records are corrected at ONRC; the next snapshot brings the fix. rating (1-3): your user's own answer on how useful Leadgen is, never yours.",
       "inputSchema": {
         "properties": {
           "message": {
-            "description": "The report, in plain words: what is missing or wrong.",
+            "default": "",
+            "description": "The report, in plain words: what is missing or wrong. Optional with a rating (then: anything else your user said).",
             "title": "Message",
             "type": "string"
           },
@@ -2904,11 +2905,37 @@
             "default": null,
             "description": "Optional email address for a reply; nothing is mailed to it automatically.",
             "title": "Contact"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional: your user's own answer to how useful Leadgen is to them: 1 (not at all), 2 (so-so) or 3 (very). Ask them; never answer for them. With a rating, kind is ignored.",
+            "title": "Rating"
+          },
+          "reasons": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional, with a rating: what your user named. For 1-2: 'missing_data', 'hard_to_use', 'limits_price', 'cant_find', 'other'; for 3: 'check_partners', 'find_clients', 'api_ai', 'other'.",
+            "title": "Reasons"
           }
         },
-        "required": [
-          "message"
-        ],
         "type": "object",
         "title": "report_issueArguments"
       },
