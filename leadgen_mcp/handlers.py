@@ -54,6 +54,10 @@ async def company_contracts(api: LeadgenAPI, args: dict[str, Any]) -> dict:
 
 async def report_issue(api: LeadgenAPI, args: dict[str, Any]) -> dict:
     body = _pick(args, "message", "kind", "cui")
+    if args.get("rating") is not None:
+        # a rating answers "how useful is Leadgen?": the REST kind is `rating`, any other kind is ignored
+        body = _pick(args, "message", "rating", "reasons")
+        body["kind"] = "rating"
     if args.get("contact") is not None:
         body["email"] = args["contact"]  # the REST body calls it `email`
     if api.config.source:

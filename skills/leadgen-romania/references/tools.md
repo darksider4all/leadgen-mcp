@@ -26,7 +26,7 @@ CUI, county, city, legal form, risk level, phone, website, latest revenue and he
 | `check_vat` | `cui`* | Live check against the EU VIES register: valid today or not, name and address, and whether the name agrees with the registry. |
 | `list_watches` | — | Every watch the key holds, with what changed since the last poll. Nothing is marked seen. Free. |
 | `get_usage` | — | Plan, daily limit, used today, left, reset time. Free. |
-| `report_issue` | `message`*, `kind` (`gap`, `wrong_record`, `bug`, `idea`), `cui`, `contact` | Free; reaches the founder. |
+| `report_issue` | `message` (optional with a rating), `kind` (`gap`, `wrong_record`, `bug`, `idea`), `cui`, `contact`, `rating` (1-3, ask the user), `reasons` | Free; reaches the founder. |
 
 ## Refusals
 

@@ -124,3 +124,11 @@ async def test_report_issue_without_source_has_no_ref():
         route = router.post("/feedback").mock(return_value=httpx.Response(200, json={"status": "received", "id": 1}))
         await call_tool("report_issue", {"message": "hi"}, source="")
     assert json.loads(route.calls.last.request.content) == {"message": "hi"}
+
+
+async def test_report_issue_rating_goes_as_kind_rating():
+    with respx.mock(base_url=API) as router:
+        route = router.post("/feedback").mock(return_value=httpx.Response(200, json={"status": "received", "id": 1}))
+        result = await call_tool("report_issue", {"rating": 2, "reasons": ["missing_data"], "kind": "bug"}, source="")
+    assert not result.isError, result.content
+    assert json.loads(route.calls.last.request.content) == {"rating": 2, "reasons": ["missing_data"], "kind": "rating"}

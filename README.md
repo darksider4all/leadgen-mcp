@@ -156,7 +156,7 @@ with the live server card; `python scripts/check_public.py` checks that nothing 
 | `check_vat` | Check a Romanian VAT number against the EU's VIES register in real time: is it a valid VAT number today, under which name and address (a company's; never a sole trader's), and does that name agree with the company registry. |
 | `list_watches` | List every company and CAEN activity your API key watches, each with what changed since the last watchlist poll, most severe first. |
 | `get_usage` | Show your own allowance: plan, daily limit, lookups used today, how many remain, when it resets (midnight Romanian time, 00:00 Europe/Bucharest) and any credit balance. |
-| `report_issue` | Tell the Leadgen founder what is missing or wrong: a missing field, firm or source (kind 'gap'), a wrong company record ('wrong_record', pass its cui), a bug, an idea. |
+| `report_issue` | Tell the Leadgen founder what is missing or wrong: a missing field, firm or source (kind 'gap'), a wrong company record ('wrong_record', pass its cui), a bug, an idea; or your user's own 1-3 rating of how useful Leadgen is (optional `rating`, `reasons`). |
 
 
 Every company-bearing answer carries `asOf` (registry snapshot, financial year, ANAF load date) — cite it.
